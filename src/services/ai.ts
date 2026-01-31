@@ -41,7 +41,7 @@ export const aiService = {
 
     async extractLabResults(file: File): Promise<any[]> {
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using 1.5 Flash for OCR as requested (user said 3-flash, assuming 1.5-flash)
 
             // Convert file to base64
             const base64Data = await new Promise<string>((resolve, reject) => {
