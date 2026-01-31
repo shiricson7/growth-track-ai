@@ -39,9 +39,9 @@ function App() {
         setLabResults(labs);
         // Transform measurements for chart if needed, for now keeping mock structure
       } else {
-        // Fallback to mock if DB empty
-        setCurrentPatient(PATIENT);
-        setLabResults(LAB_RESULTS);
+        // No patients found - show empty state
+        setCurrentPatient(null);
+        setLabResults([]);
       }
     } catch (e) {
       console.error("Failed to load data", e);
@@ -174,7 +174,7 @@ function App() {
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100">
               <User size={14} />
-              <span>현재 환자: {currentPatient.name}</span>
+              <span>현재 환자: {currentPatient ? currentPatient.name : '선택된 환자 없음'}</span>
             </div>
             <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
               <Bell size={20} />
@@ -197,11 +197,34 @@ function App() {
             />
           )}
 
+          {currentView === 'dashboard' && !currentPatient && (
+            <div className="flex flex-col items-center justify-center h-full animate-in fade-in zoom-in duration-500">
+              <button
+                onClick={() => setCurrentView('patient-form')}
+                className="relative group cursor-pointer transition-transform hover:scale-105 focus:outline-none"
+              >
+                <img
+                  src="/src/empty_placeholder.jpeg"
+                  alt="No patients found - Click to register"
+                  className="max-w-md w-full rounded-2xl shadow-xl border-4 border-white object-cover"
+                />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-2xl">
+                  <div className="bg-white/90 px-6 py-3 rounded-full font-bold text-slate-900 shadow-lg flex items-center gap-2">
+                    <UserPlus size={20} className="text-blue-600" />
+                    신규 환자 등록하기
+                  </div>
+                </div>
+              </button>
+              <p className="mt-6 text-slate-500 text-lg font-medium">등록된 환자가 없습니다.</p>
+              <p className="text-slate-400 text-sm">이미지를 클릭하여 첫 번째 환자를 등록하세요.</p>
+            </div>
+          )}
+
           {currentView === 'ocr' && (
             <LabOCR onResultsProcessed={handleNewLabResults} />
           )}
 
-          {currentView === 'report' && (
+          {currentView === 'report' && currentPatient && (
             <ParentReport
               patient={currentPatient}
               growthData={GROWTH_DATA}
