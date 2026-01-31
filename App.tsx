@@ -204,7 +204,7 @@ function App() {
                 className="relative group cursor-pointer transition-transform hover:scale-105 focus:outline-none"
               >
                 <img
-                  src="/src/empty_placeholder.jpeg"
+                  src="/empty_placeholder.jpeg"
                   alt="No patients found - Click to register"
                   className="max-w-md w-full rounded-2xl shadow-xl border-4 border-white object-cover"
                 />
