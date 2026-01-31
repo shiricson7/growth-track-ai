@@ -1,0 +1,7 @@
+{
+  "name": "GrowthTrack AI",
+  "description": "Comprehensive Pediatric Endocrinology Dashboard with AI Analysis, Growth Tracking, and Lab OCR.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
