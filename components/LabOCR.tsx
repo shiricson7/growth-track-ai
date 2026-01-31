@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Upload, CheckCircle, ScanLine, Edit2 } from 'lucide-react';
 import { LabResult } from '../types';
+import { aiService } from '../src/services/ai';
 
 interface LabOCRProps {
   onResultsProcessed: (results: LabResult[]) => void;
@@ -11,20 +12,29 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
   const [status, setStatus] = useState<'idle' | 'scanning' | 'review' | 'success'>('idle');
   const [scannedData, setScannedData] = useState<LabResult[]>([]);
 
-  // Simulation of OCR processing
-  const handleFiles = (files: FileList | null) => {
+  // Actual OCR processing using Gemini
+  const handleFiles = async (files: FileList | null) => {
     if (files && files[0]) {
       setStatus('scanning');
-      setTimeout(() => {
-        // Mock extracted data
-        const mockExtracted: LabResult[] = [
-           { id: `ocr-${Date.now()}-1`, date: new Date().toISOString().split('T')[0], parameter: 'IGF-1', value: 462, unit: 'ng/mL', referenceRange: '143-693', status: 'normal' },
-           { id: `ocr-${Date.now()}-2`, date: new Date().toISOString().split('T')[0], parameter: 'Glucose (Fasting)', value: 85, unit: 'mg/dL', referenceRange: '70-100', status: 'normal' },
-           { id: `ocr-${Date.now()}-3`, date: new Date().toISOString().split('T')[0], parameter: 'Alk Phosphatase', value: 320, unit: 'U/L', referenceRange: '150-350', status: 'normal' },
-        ];
-        setScannedData(mockExtracted);
+      try {
+        const extractedData = await aiService.extractLabResults(files[0]);
+        // Add IDs and dates to extracted data
+        const processedData: LabResult[] = extractedData.map((item: any, index: number) => ({
+          id: `ocr-${Date.now()}-${index}`,
+          date: new Date().toISOString().split('T')[0],
+          parameter: item.parameter,
+          value: item.value,
+          unit: item.unit,
+          referenceRange: item.referenceRange || '',
+          status: item.status || 'normal'
+        }));
+        setScannedData(processedData);
         setStatus('review');
-      }, 2500);
+      } catch (error) {
+        console.error("OCR Failed", error);
+        alert("OCR analysis failed. Please try again.");
+        setStatus('idle');
+      }
     }
   };
 
@@ -57,11 +67,11 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
   const handleUpdateField = (index: number, field: keyof LabResult, value: string) => {
     const newData = [...scannedData];
     if (field === 'value') {
-       const numVal = parseFloat(value);
-       newData[index] = { ...newData[index], value: isNaN(numVal) ? 0 : numVal };
+      const numVal = parseFloat(value);
+      newData[index] = { ...newData[index], value: isNaN(numVal) ? 0 : numVal };
     } else {
-       // @ts-ignore - dynamic key assignment safety ignored for simplicity in this specific context
-       newData[index] = { ...newData[index], [field]: value };
+      // @ts-ignore - dynamic key assignment safety ignored for simplicity in this specific context
+      newData[index] = { ...newData[index], [field]: value };
     }
     setScannedData(newData);
   };
@@ -80,16 +90,16 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
       </div>
 
       {status === 'idle' && (
-        <div 
+        <div
           className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'}`}
-          onDragEnter={handleDrag} 
-          onDragLeave={handleDrag} 
-          onDragOver={handleDrag} 
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <input 
-            type="file" 
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+          <input
+            type="file"
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             onChange={handleChange}
             accept="image/*,.pdf"
           />
@@ -131,36 +141,36 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
           </div>
           <div className="p-6">
             <div className="flex items-center gap-2 mb-4 text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
-               <Edit2 size={16} />
-               <p className="text-sm font-medium">추출된 데이터가 원본과 일치하는지 확인하고, 필요시 수정해주세요.</p>
+              <Edit2 size={16} />
+              <p className="text-sm font-medium">추출된 데이터가 원본과 일치하는지 확인하고, 필요시 수정해주세요.</p>
             </div>
             <div className="space-y-3">
               {scannedData.map((result, idx) => (
                 <div key={idx} className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200 shadow-sm transition-all focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
                   <div className="flex-1 w-full">
                     <label className="text-xs text-slate-500 font-semibold uppercase mb-1 block">검사 항목 (Parameter)</label>
-                    <input 
-                      value={result.parameter} 
+                    <input
+                      value={result.parameter}
                       onChange={(e) => handleUpdateField(idx, 'parameter', e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm font-medium text-slate-900 focus:outline-none focus:border-blue-500" 
+                      className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm font-medium text-slate-900 focus:outline-none focus:border-blue-500"
                     />
                   </div>
                   <div className="w-full md:w-32">
-                     <label className="text-xs text-slate-500 font-semibold uppercase mb-1 block">결과값 (Value)</label>
-                     <input 
-                        type="number"
-                        value={result.value} 
-                        onChange={(e) => handleUpdateField(idx, 'value', e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm font-bold text-blue-600 focus:outline-none focus:border-blue-500" 
-                     />
+                    <label className="text-xs text-slate-500 font-semibold uppercase mb-1 block">결과값 (Value)</label>
+                    <input
+                      type="number"
+                      value={result.value}
+                      onChange={(e) => handleUpdateField(idx, 'value', e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm font-bold text-blue-600 focus:outline-none focus:border-blue-500"
+                    />
                   </div>
                   <div className="w-full md:w-24">
-                     <label className="text-xs text-slate-500 font-semibold uppercase mb-1 block">단위 (Unit)</label>
-                     <input 
-                        value={result.unit} 
-                        onChange={(e) => handleUpdateField(idx, 'unit', e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm text-slate-500 focus:outline-none focus:border-blue-500" 
-                     />
+                    <label className="text-xs text-slate-500 font-semibold uppercase mb-1 block">단위 (Unit)</label>
+                    <input
+                      value={result.unit}
+                      onChange={(e) => handleUpdateField(idx, 'unit', e.target.value)}
+                      className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm text-slate-500 focus:outline-none focus:border-blue-500"
+                    />
                   </div>
                 </div>
               ))}
