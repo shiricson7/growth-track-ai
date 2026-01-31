@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Upload, CheckCircle, ScanLine, Edit2 } from 'lucide-react';
+import { Upload, CheckCircle, ScanLine, Edit2, Plus } from 'lucide-react';
 import { LabResult } from '../types';
 import { aiService } from '../src/services/ai';
 
@@ -76,7 +76,23 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
     setScannedData(newData);
   };
 
+  const addNewItem = () => {
+    const newItem: LabResult = {
+      id: `manual-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      parameter: '',
+      value: 0,
+      unit: '',
+      referenceRange: '',
+      status: 'normal',
+      isManual: true // Custom flag for UI logic
+    } as any;
+    setScannedData([...scannedData, newItem]);
+  };
+
   const confirmData = () => {
+    // Remove the temporary flag before sending up if needed, or keep it depending on type definition
+    // For now we just pass it up. typestcript might complain if we don't cast or update type.
     onResultsProcessed(scannedData);
     setStatus('success');
     setTimeout(() => setStatus('idle'), 2000);
@@ -152,7 +168,11 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
                     <input
                       value={result.parameter}
                       onChange={(e) => handleUpdateField(idx, 'parameter', e.target.value)}
-                      className="w-full bg-white border border-slate-300 rounded px-3 py-2 text-sm font-medium text-slate-900 focus:outline-none focus:border-blue-500"
+                      readOnly={!result.isManual}
+                      className={`w-full border rounded px-3 py-2 text-sm font-medium focus:outline-none focus:border-blue-500 ${!result.isManual
+                        ? 'bg-slate-100 text-slate-600 cursor-not-allowed border-slate-200'
+                        : 'bg-white text-slate-900 border-slate-300'
+                        }`}
                     />
                   </div>
                   <div className="w-full md:w-32">
@@ -174,6 +194,14 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
                   </div>
                 </div>
               ))}
+
+              <button
+                onClick={addNewItem}
+                className="w-full py-3 border-2 border-dashed border-slate-300 rounded-lg text-slate-500 font-medium hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <Plus size={18} />
+                항목 직접 추가하기
+              </button>
             </div>
             <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
               <button onClick={() => setStatus('idle')} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium">취소</button>
