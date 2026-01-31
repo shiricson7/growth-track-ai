@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(API_KEY || "");
 export const aiService = {
     async analyzeGrowth(patientData: any, measurements: any[], labResults: any[]) {
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" }); // Using 1.5 Pro as requested (mapped to latest)
+            const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" }); // Using 1.5 Pro as requested (mapped to latest)
 
             const prompt = `
         You are an expert pediatric endocrinologist. Analyze the following patient data and provide a clinical assessment.
@@ -41,7 +41,7 @@ export const aiService = {
 
     async extractLabResults(file: File): Promise<any[]> {
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Using 1.5 Flash for OCR as requested (user said 3-flash, assuming 1.5-flash)
+            const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" }); // Using 1.5 Flash for OCR as requested (user said 3-flash, assuming 1.5-flash)
 
             // Convert file to base64
             const base64Data = await new Promise<string>((resolve, reject) => {
