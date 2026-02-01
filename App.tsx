@@ -402,7 +402,9 @@ function App() {
             <ParentReport
               patient={currentPatient}
               growthData={growthData}
+              labResults={labResults}
               onBack={() => setCurrentView('patient-detail')}
+              settings={clinicSettings}
             />
           )}
 

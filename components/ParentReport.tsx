@@ -121,8 +121,8 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
             <p className="text-slate-500 mt-2 text-lg"><span className="text-slate-900 font-semibold">{patient.name}</span> 어린이의 부모님께 드리는 보고서</p>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-blue-600">{settings.hospitalName}</div>
-            <p className="text-slate-400">담당의: {settings.doctorName}</p>
+            <div className="text-2xl font-bold text-blue-600">{settings?.hospitalName || 'GrowthTrack Clinic'}</div>
+            <p className="text-slate-400">담당의: {settings?.doctorName || ''}</p>
             <p className="text-slate-400">{new Date().toLocaleDateString()}</p>
           </div>
         </div>
@@ -164,7 +164,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
 
         {/* Footer */}
         <div className="mt-20 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm">
-          <p>{settings.hospitalName} • {settings.address} • {settings.phone}</p>
+          <p>{settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}</p>
         </div>
       </div>
     </div>
