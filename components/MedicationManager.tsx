@@ -151,6 +151,18 @@ const MedicationManager: React.FC<MedicationManagerProps> = ({ patient, onSave, 
                             <option value="paused">중단 (Paused)</option>
                         </select>
                     </div>
+
+                    {(newMed.status === 'completed' || newMed.status === 'paused') && (
+                        <div>
+                            <label className="block text-sm font-bold text-slate-700 mb-2">종료일 (End Date)</label>
+                            <input
+                                type="date"
+                                className="w-full rounded-lg border-slate-300 focus:border-blue-500"
+                                value={newMed.endDate || newMed.startDate}
+                                onChange={e => setNewMed({ ...newMed, endDate: e.target.value })}
+                            />
+                        </div>
+                    )}
                 </div>
                 <div className="mt-4 flex justify-end gap-2">
                     {editingId && (

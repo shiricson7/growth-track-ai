@@ -12,18 +12,42 @@ export const api = {
         if (error) throw error;
 
         // Map DB snake_case to Frontend camelCase
-        return data.map((p: any) => ({
-            ...p,
-            dob: p.birth_date,
-            ssn: p.registration_number,
-            // chartNumber: p.id, // Placeholder or specific column if exists
-            // Default values for fields not in DB yet
-            boneAge: p.bone_age || 0,
-            chronologicalAge: 0,
-            predictedAdultHeight: 0,
-            targetHeight: 0,
-            medications: []
-        })) as Patient[];
+        return data.map((p: any) => {
+            // Calculate Age
+            const birthDate = new Date(p.birth_date);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+
+            // Calculate MPH
+            let mph = 0;
+            if (p.height_father && p.height_mother) {
+                if (p.gender === 'male') {
+                    mph = (p.height_father + p.height_mother + 13) / 2;
+                } else {
+                    mph = (p.height_father + p.height_mother - 13) / 2;
+                }
+            }
+
+            return {
+                ...p,
+                dob: p.birth_date,
+                ssn: p.registration_number,
+                // heightFather/Mother
+                heightFather: p.height_father,
+                heightMother: p.height_mother,
+
+                // Calculated values
+                boneAge: p.bone_age || 0,
+                chronologicalAge: age,
+                predictedAdultHeight: 0, // Placeholder for AI
+                targetHeight: parseFloat(mph.toFixed(1)), // MPH
+                medications: []
+            };
+        }) as Patient[];
     },
 
     async getPatient(id: string) {
@@ -35,16 +59,37 @@ export const api = {
 
         if (error) throw error;
 
-        // Map DB to Frontend
         const p = data as any;
+
+        // Calculate Age
+        const birthDate = new Date(p.birth_date);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+
+        // Calculate MPH
+        let mph = 0;
+        if (p.height_father && p.height_mother) {
+            if (p.gender === 'male') {
+                mph = (p.height_father + p.height_mother + 13) / 2;
+            } else {
+                mph = (p.height_father + p.height_mother - 13) / 2;
+            }
+        }
+
         return {
             ...p,
             dob: p.birth_date,
             ssn: p.registration_number,
-            boneAge: 0,
-            chronologicalAge: 0,
+            heightFather: p.height_father,
+            heightMother: p.height_mother,
+            boneAge: p.bone_age || 0,
+            chronologicalAge: age,
             predictedAdultHeight: 0,
-            targetHeight: 0,
+            targetHeight: parseFloat(mph.toFixed(1)),
             medications: []
         } as Patient;
     },
@@ -56,8 +101,8 @@ export const api = {
             birth_date: patient.dob,
             gender: patient.gender.toLowerCase(), // 'Male' -> 'male'
             registration_number: patient.ssn,
-            height_father: patient.name === 'Test' ? 175 : null, // Mock or add field
-            height_mother: patient.name === 'Test' ? 165 : null
+            height_father: patient.heightFather || null,
+            height_mother: patient.heightMother || null
             // contact_number, guardian_name, etc.
         };
 

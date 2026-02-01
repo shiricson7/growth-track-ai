@@ -54,6 +54,9 @@ export interface Patient {
   boneAge: number; // in years
   chronologicalAge: number; // in years
   predictedAdultHeight: number; // cm
+  predictedAdultHeight: number; // cm
   targetHeight: number; // cm (mid-parental)
+  heightFather?: number; // cm
+  heightMother?: number; // cm
   medications: Medication[];
 }
