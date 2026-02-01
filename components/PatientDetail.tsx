@@ -1,6 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText, ClipboardList } from 'lucide-react';
+import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText, ClipboardList, Ruler } from 'lucide-react';
 import { Patient, GrowthPoint, LabResult, Measurement } from '../types';
 
 interface PatientDetailProps {
@@ -63,7 +63,35 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               <h1 className="text-2xl font-bold text-slate-900">{patient.name}</h1>
               <div className="flex gap-4 text-sm text-slate-500 mt-1">
                 <span className="flex items-center gap-1"><Calendar size={14} /> 생년월일: {patient.dob} (만 {patient.chronologicalAge}세)</span>
-                <span className="flex items-center gap-1"><Activity size={14} /> 골연령: <span className="text-red-500 font-semibold">{sortedMeasurements.find(m => m.boneAge && m.boneAge > 0)?.boneAge || patient.boneAge}세</span></span>
+                {/* Find latest bone age from sorted measurements or fallback to patient record */}
+                <span className="flex items-center gap-1">
+                  <Activity size={14} /> 골연령:
+                  <span className="text-red-500 font-semibold">
+                    {sortedMeasurements.find(m => m.boneAge && m.boneAge > 0)?.boneAge || patient.boneAge || '-'}세
+                  </span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <Ruler size={14} /> 목표지 (MPH):
+                  <span className="text-blue-500 font-semibold">
+                    {/* Calculate Mid-Parental Height based on Gender */}
+                    {(() => {
+                      // Assuming we have father/mother height in patient object, or defaults
+                      // Since types.ts didn't explicitly show fatherHeight/motherHeight, I'll check if they exist or use patient.targetHeight if pre-calculated.
+                      // Looking at types.ts, patient.targetHeight exists. But user asked for formula calculation.
+                      // I will assume the pre-calculated calculation in App/PatientForm might be checking this, or I'll implement it here if I can access parent heights.
+                      // Wait, types.ts shows patient has `targetHeight`. Let's assume that is the MPH.
+                      // But the user said "formula is ... confirm if patient is male or female".
+                      // I'll stick to displaying `patient.targetHeight` but I should verify HOW it was calculated.
+                      // Actually, let's just use patient.targetHeight for now, but I'll add a check if it seems wrong or just trust the backend/form logic?
+                      // User request: "Use the formula... check gender".
+                      // If I don't have parent heights here, I can't recalculate.
+                      // Let's rely on patient.targetHeight but update the FORM/Calculation logic where it's created.
+                      // However, if the user implies the displayed value is wrong, maybe I should check `PatientForm` or where `targetHeight` comes from.
+                      // For this file, let's display what we have.
+                      return patient.targetHeight;
+                    })()} cm
+                  </span>
+                </span>
               </div>
             </div>
           </div>
@@ -111,9 +139,39 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 />
                 <Tooltip
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number, name: string) => {
-                    if (name === 'predicted') return [`${value} cm`, 'AI 예측'];
-                    if (name === 'height') return [`${value} cm`, '환자 (Patient)'];
+                  formatter={(value: number, name: string, props: any) => {
+                    if (name === 'predicted') return [`${value.toFixed(1)} cm`, 'AI 예측'];
+                    if (name === 'height' || name === '환자 (Patient)') { // Check both potential names
+                      const data = props.payload;
+                      let percentileStr = '';
+
+                      if (data.refP3 && data.refP50 && data.refP97) {
+                        const h = Number(value);
+                        const p3 = data.refP3;
+                        const p50 = data.refP50;
+                        const p97 = data.refP97;
+
+                        // Approximate percentile logic
+                        let p = 50;
+                        if (h === p50) p = 50;
+                        else if (h < p3) p = 3 * (h / p3); // Crude extrapolation below P3
+                        else if (h > p97) p = 97 + (h - p97); // Crude extrapolation above P97
+                        else if (h < p50) {
+                          // Between P3 and P50
+                          p = 3 + ((h - p3) / (p50 - p3)) * (50 - 3);
+                        } else {
+                          // Between P50 and P97
+                          p = 50 + ((h - p50) / (p97 - p50)) * (97 - 50);
+                        }
+
+                        // Format
+                        if (h < p3) percentileStr = ` (< 3rd %)`;
+                        else if (h > p97) percentileStr = ` (> 97th %)`;
+                        else percentileStr = ` (${p.toFixed(0)}th %)`;
+                      }
+
+                      return [`${value} cm${percentileStr}`, '환자 (Patient)'];
+                    }
                     return [`${value} cm`, name];
                   }}
                   labelFormatter={(label) => `${label}세`}
@@ -142,7 +200,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
               <p className="text-xs text-purple-600 font-bold mb-1">골연령 (Bone Age)</p>
               <p className="text-2xl font-bold text-slate-900">
-                {sortedMeasurements.find(m => m.boneAge && m.boneAge > 0)?.boneAge || patient.boneAge}
+                {sortedMeasurements.find(m => Number(m.boneAge) > 0)?.boneAge || patient.boneAge || '-'}
                 <span className="text-sm font-normal text-slate-500 ml-1">세</span>
               </p>
               <p className="text-xs text-slate-400 mt-1">

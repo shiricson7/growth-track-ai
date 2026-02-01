@@ -33,6 +33,7 @@ export const aiService = {
           "predictedHeight": number (e.g. 175.5)
         }
         Do not include markdown code blocks. Just the raw JSON.
+        IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN language (한국어).
       `;
 
             const result = await model.generateContent(prompt);
