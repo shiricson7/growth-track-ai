@@ -29,6 +29,7 @@ function App() {
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
   const [growthData, setGrowthData] = useState<any[]>([]); // Initialize empty
   const [searchQuery, setSearchQuery] = useState('');
+  const [editingPatient, setEditingPatient] = useState<Patient | undefined>(undefined); // Added for edit mode
 
   // Settings State
   const [clinicSettings, setClinicSettings] = useState<ClinicSettings>(() => {
@@ -240,10 +241,23 @@ function App() {
     }
   };
 
+  const handleEditPatient = (patient: Patient) => {
+    // When editing, we want to pre-fill the form
+    // We already have handleSidebarClick logic, but we need a specific 'edit-patient' view or re-use 'patient-form' with initial data
+    // Let's reuse 'patient-form' but we need a way to pass the patient data.
+    // I need to add state for 'editingPatient'
+    setEditingPatient(patient);
+    setCurrentView('patient-form');
+  };
+
   const handleSidebarClick = (view: View) => {
     if ((view === 'ocr' || view === 'report' || view === 'bone-age' || view === 'measurement-input') && !currentPatient) {
       alert("먼저 환자를 선택해주세요.\n(Please select a patient first.)");
       return;
+    }
+    if (view === 'patient-form') {
+      // Reset editing state when clicking "New Patient" from sidebar
+      setEditingPatient(undefined);
     }
     setCurrentView(view);
   };
@@ -374,6 +388,7 @@ function App() {
                 isAnalyzing={isAnalyzing}
                 onRefresh={() => currentPatient && loadPatientData(currentPatient.id)}
                 onManageMedication={() => setCurrentView('medication-setup')}
+                onEditPatient={() => handleEditPatient(currentPatient)} // Pass edit handler
               />
             </>
           )}
@@ -419,6 +434,7 @@ function App() {
 
           {currentView === 'patient-form' && (
             <PatientForm
+              initialData={editingPatient} // Pass initial data for editing
               onSave={handleSavePatient}
               onCancel={() => setCurrentView('dashboard')}
             />

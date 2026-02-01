@@ -15,15 +15,18 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
     gender: 'Male',
     height: 0,
     weight: 0,
-    boneAge: 0, // Default to 0 as it's removed from registration
-    targetHeight: 0,
-    medications: [],
-    chartNumber: '',
-    ssn: '',
-    visitDate: new Date().toISOString().split('T')[0] // Default to today
+    boneAge: initialData?.boneAge || 0, // Default to 0 as it's removed from registration
+    targetHeight: initialData?.targetHeight || 0,
+    medications: initialData?.medications || [],
+    chartNumber: initialData?.chartNumber || '',
+    ssn: initialData?.ssn || '',
+    visitDate: initialData?.visitDate || new Date().toISOString().split('T')[0] // Default to today
   });
 
-  const [parentHeight, setParentHeight] = useState({ father: 175, mother: 160 });
+  const [parentHeight, setParentHeight] = useState({
+    father: initialData?.heightFather || 175,
+    mother: initialData?.heightMother || 160
+  });
   const [ssnInput, setSsnInput] = useState(initialData?.ssn || '');
 
   // Update formData when ssnInput changes (if manual entry needed, but we mostly drive from ssnInput)
@@ -87,7 +90,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
       targetHeight: calculateTargetHeight(),
       predictedAdultHeight: calculateTargetHeight() - 2, // Mock prediction logic
       medications: formData.medications || [],
-      ssn: ssnInput
+      ssn: ssnInput,
+      chartNumber: formData.chartNumber,
+      heightFather: parentHeight.father,
+      heightMother: parentHeight.mother
     } as Patient;
     onSave(fullData);
   };

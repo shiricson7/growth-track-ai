@@ -39,6 +39,7 @@ export const api = {
                 // heightFather/Mother
                 heightFather: p.height_father,
                 heightMother: p.height_mother,
+                chartNumber: p.chart_number,
 
                 // Calculated values
                 boneAge: p.bone_age || 0,
@@ -86,6 +87,7 @@ export const api = {
             ssn: p.registration_number,
             heightFather: p.height_father,
             heightMother: p.height_mother,
+            chartNumber: p.chart_number,
             boneAge: p.bone_age || 0,
             chronologicalAge: age,
             predictedAdultHeight: 0,
@@ -101,6 +103,7 @@ export const api = {
             birth_date: patient.dob,
             gender: patient.gender.toLowerCase(), // 'Male' -> 'male'
             registration_number: patient.ssn,
+            chart_number: patient.chartNumber,
             height_father: patient.heightFather || null,
             height_mother: patient.heightMother || null
             // contact_number, guardian_name, etc.
@@ -130,6 +133,9 @@ export const api = {
         if (updates.dob) dbUpdates.birth_date = updates.dob;
         if (updates.gender) dbUpdates.gender = updates.gender.toLowerCase();
         if (updates.ssn) dbUpdates.registration_number = updates.ssn;
+        if (updates.chartNumber) dbUpdates.chart_number = updates.chartNumber;
+        if (updates.heightFather) dbUpdates.height_father = updates.heightFather;
+        if (updates.heightMother) dbUpdates.height_mother = updates.heightMother;
         if (updates.boneAge) dbUpdates.bone_age = updates.boneAge; // Added mapping
 
         const { data, error } = await supabase

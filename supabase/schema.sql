@@ -12,7 +12,8 @@ create table if not exists patients (
   contact_number text,
   guardian_name text,
   height_father numeric,
-  height_mother numeric
+  height_mother numeric,
+  chart_number text
 );
 
 -- Safely add new columns if they don't exist
