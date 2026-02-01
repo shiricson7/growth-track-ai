@@ -1,12 +1,13 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText } from 'lucide-react';
-import { Patient, GrowthPoint, LabResult } from '../types';
+import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText, ClipboardList } from 'lucide-react';
+import { Patient, GrowthPoint, LabResult, Measurement } from '../types';
 
 interface PatientDetailProps {
   patient: Patient;
   growthData: GrowthPoint[];
   labResults: LabResult[];
+  measurements: Measurement[]; // New prop
   onGenerateReport: () => void;
   aiAnalysis: string[] | null;
   onAnalyzeGrowth: () => void;
@@ -17,15 +18,20 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   patient,
   growthData,
   labResults,
+  measurements,
   onGenerateReport,
   aiAnalysis,
   onAnalyzeGrowth,
   isAnalyzing
 }) => {
-
   /* Lab History State */
   const [labViewMode, setLabViewMode] = React.useState<'list' | 'trend'>('list');
   const [selectedParameter, setSelectedParameter] = React.useState<string>('');
+
+  // Sorting measurements for history list
+  const sortedMeasurements = [...measurements]
+    .filter(m => m.height > 0 || m.weight > 0) // Only show records with physical measurements
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // Extract unique parameters for dropdown
   const availableParameters = Array.from(new Set(labResults.map(l => l.parameter))).sort();
@@ -90,15 +96,19 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 <YAxis domain={['auto', 'auto']} unit="cm" stroke="#64748b" />
                 <Tooltip
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number) => [`${value} cm`]}
+                  formatter={(value: number, name: string) => {
+                    if (name === 'predicted') return [`${value} cm`, 'AI 예측'];
+                    if (name === 'height') return [`${value} cm`, '환자 (Patient)'];
+                    return [`${value} cm`, name];
+                  }}
                   labelFormatter={(label) => `${label}세`}
                 />
                 <Legend />
                 <Line type="monotone" dataKey="percentile50" stroke="#cbd5e1" strokeDasharray="5 5" name="평균 (50th %)" dot={false} strokeWidth={2} />
                 <Line type="monotone" dataKey="percentile97" stroke="#e2e8f0" strokeDasharray="3 3" name="97th %" dot={false} />
                 <Line type="monotone" dataKey="percentile3" stroke="#e2e8f0" strokeDasharray="3 3" name="3rd %" dot={false} />
-                <Line type="monotone" dataKey="height" stroke="#2563eb" strokeWidth={3} name="환자 (Patient)" activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="predicted" stroke="#7c3aed" strokeWidth={2} strokeDasharray="4 4" name="AI 예측 (Predicted)" />
+                <Line type="monotone" dataKey="height" stroke="#2563eb" strokeWidth={3} name="환자 (Patient)" activeDot={{ r: 6 }} connectNulls />
+                <Line type="monotone" dataKey="predicted" stroke="#7c3aed" strokeWidth={2} strokeDasharray="5 5" name="AI 예측 (Predicted)" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -204,6 +214,37 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 데이터 기반 AI 분석을 실행하려면 버튼을 클릭하세요.
               </div>
             )}
+          </div>
+
+          {/* Measurement History */}
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 min-h-[300px]">
+            <h2 className="text-lg font-bold flex items-center gap-2 mb-4 text-slate-800">
+              <ClipboardList className="text-blue-600" /> 신체 계측 기록 (History)
+            </h2>
+            <div className="overflow-auto max-h-[300px]">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-slate-500 uppercase bg-slate-50 sticky top-0">
+                  <tr>
+                    <th className="px-3 py-2">날짜</th>
+                    <th className="px-3 py-2">신장</th>
+                    <th className="px-3 py-2">체중</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {sortedMeasurements.length === 0 ? (
+                    <tr><td colSpan={3} className="px-3 py-4 text-center text-slate-400">기록이 없습니다.</td></tr>
+                  ) : (
+                    sortedMeasurements.map((m, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="px-3 py-2 text-slate-600 whitespace-nowrap">{m.date}</td>
+                        <td className="px-3 py-2 font-medium">{m.height ? `${m.height} cm` : '-'}</td>
+                        <td className="px-3 py-2 text-slate-500">{m.weight ? `${m.weight} kg` : '-'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

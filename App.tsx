@@ -28,6 +28,8 @@ function App() {
   const [aiAnalysis, setAiAnalysis] = useState<string[] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  const [measurements, setMeasurements] = useState<any[]>([]); // New state for raw measurements
+
   // Load Initial Data
   useEffect(() => {
     loadData();
@@ -46,15 +48,22 @@ function App() {
   const loadPatientData = async (patientId: string) => {
     try {
       const labs = await api.getLabResults(patientId);
-      const measurements = await api.getMeasurements(patientId);
+      const meas = await api.getMeasurements(patientId);
 
       setLabResults(labs);
+      setMeasurements(meas);
 
       // Merge measurements into Growth Data
-      // 1. Start with standard curve (GROWTH_DATA)
+      // 1. Start with standard curve (GROWTH_DATA) but REMOVE mock 'height' values
+      //    so they don't conflict with real patient data.
+      const baseData = GROWTH_DATA.map(d => {
+        const { height, ...rest } = d; // Strip 'height' from mock standard curves
+        return rest;
+      });
+
       // 2. Add patient measurements
       // Real implementation would calculate exact age for each measurement
-      const patientData = measurements.map(m => {
+      const patientData = meas.map(m => {
         const patient = patients.find(p => p.id === patientId);
         if (!patient) return null;
 
@@ -73,10 +82,7 @@ function App() {
       }).filter(Boolean);
 
       // Simple merge: Concat and sort by age
-      // Note: Recharts line chart handles disparate X values well? 
-      // Better to map them onto the same structure or just verify.
-      // For this demo, let's just append.
-      const combinedData = [...GROWTH_DATA, ...patientData!].sort((a: any, b: any) => a.age - b.age);
+      const combinedData = [...baseData, ...patientData!].sort((a: any, b: any) => a.age - b.age);
       setGrowthData(combinedData);
 
     } catch (e) {
@@ -328,6 +334,7 @@ function App() {
                 patient={currentPatient}
                 growthData={growthData}
                 labResults={labResults}
+                measurements={measurements}
                 onGenerateReport={() => setCurrentView('report')}
                 aiAnalysis={aiAnalysis}
                 onAnalyzeGrowth={handleAIAnalysis}
