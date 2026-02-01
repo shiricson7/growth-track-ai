@@ -18,7 +18,7 @@ export const api = {
             ssn: p.registration_number,
             // chartNumber: p.id, // Placeholder or specific column if exists
             // Default values for fields not in DB yet
-            boneAge: 0,
+            boneAge: p.bone_age || 0,
             chronologicalAge: 0,
             predictedAdultHeight: 0,
             targetHeight: 0,
@@ -85,6 +85,7 @@ export const api = {
         if (updates.dob) dbUpdates.birth_date = updates.dob;
         if (updates.gender) dbUpdates.gender = updates.gender.toLowerCase();
         if (updates.ssn) dbUpdates.registration_number = updates.ssn;
+        if (updates.boneAge) dbUpdates.bone_age = updates.boneAge; // Added mapping
 
         const { data, error } = await supabase
             .from('patients')
@@ -98,7 +99,8 @@ export const api = {
         return {
             ...p,
             dob: p.birth_date,
-            ssn: p.registration_number
+            ssn: p.registration_number,
+            boneAge: p.bone_age // return mapped value
         } as Patient;
     },
 
@@ -218,5 +220,45 @@ export const api = {
 
         if (error) throw error;
         return data as unknown as LabResult[];
+    },
+
+    // --- Medications ---
+    async getMedications(patientId: string) {
+        const { data, error } = await supabase
+            .from('medications')
+            .select('*')
+            .eq('patient_id', patientId)
+            .order('start_date', { ascending: false });
+
+        if (error) throw error;
+
+        return data.map((m: any) => ({
+            name: m.name,
+            type: m.type,
+            dosage: m.dosage,
+            frequency: m.frequency,
+            startDate: m.start_date,
+            endDate: m.end_date,
+            status: m.status
+        })) as any[];
+    },
+
+    async addMedication(patientId: string, med: any) {
+        const dbMed = {
+            patient_id: patientId,
+            name: med.name,
+            type: med.type,
+            dosage: med.dosage,
+            frequency: med.frequency,
+            start_date: med.startDate,
+            end_date: med.endDate || null,
+            status: med.status
+        };
+
+        const { error } = await supabase
+            .from('medications')
+            .insert([dbMed]);
+
+        if (error) throw error;
     }
 };

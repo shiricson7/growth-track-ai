@@ -16,6 +16,7 @@ interface PatientDetailProps {
   onAnalyzeGrowth: () => void;
   isAnalyzing: boolean;
   onRefresh: () => void; // Added for refreshing data after edits
+  onManageMedication?: () => void; // Added
 }
 
 const PatientDetail: React.FC<PatientDetailProps> = ({
@@ -28,7 +29,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   aiPredictedHeight,
   onAnalyzeGrowth,
   isAnalyzing,
-  onRefresh
+  onRefresh,
+  onManageMedication
 }) => {
   /* Lab History State */
   const [labViewMode, setLabViewMode] = React.useState<'list' | 'trend'>('list');
@@ -277,6 +279,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h2 className="text-lg font-bold flex items-center gap-2 mb-4 text-slate-800">
               <Syringe className="text-green-600" /> 투약 프로토콜
+              <button
+                onClick={() => onManageMedication?.()}
+                className="ml-auto text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded hover:bg-slate-200 transition-colors"
+              >
+                관리 (Manage)
+              </button>
             </h2>
             <div className="space-y-3">
               {patient.medications.map((med, idx) => (

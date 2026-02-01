@@ -9,6 +9,7 @@ import PatientForm from './components/PatientForm';
 import BoneAgeReading from './components/BoneAgeReading';
 import MeasurementInput from './components/MeasurementInput';
 import Settings, { ClinicSettings } from './components/Settings'; // Added
+import MedicationManager from './components/MedicationManager'; // Added
 import { PATIENT } from './mockData'; // Removed LAB_RESULTS, GROWTH_DATA
 import { LabResult, Patient } from './types';
 import { api } from './src/services/api';
@@ -18,7 +19,7 @@ import { getGrowthStandards } from './src/data/growthStandardsData';
 
 
 
-type View = 'dashboard' | 'patient-detail' | 'ocr' | 'report' | 'settings' | 'patient-form' | 'bone-age' | 'measurement-input';
+type View = 'dashboard' | 'patient-detail' | 'ocr' | 'report' | 'settings' | 'patient-form' | 'bone-age' | 'measurement-input' | 'medication-setup';
 
 function App() {
   /* Supabase & AI Integration */
@@ -72,10 +73,16 @@ function App() {
     try {
       const labs = await api.getLabResults(patientId);
       const meas = await api.getMeasurements(patientId);
+      const meds = await api.getMedications(patientId);
       const patient = patients.find(p => p.id === patientId);
 
       setLabResults(labs);
       setMeasurements(meas);
+
+      // Update patient with latest meds
+      if (patient) {
+        patient.medications = meds;
+      }
 
       if (!patient) return;
 
@@ -365,6 +372,8 @@ function App() {
                 aiPredictedHeight={aiPredictedHeight}
                 onAnalyzeGrowth={handleAIAnalysis}
                 isAnalyzing={isAnalyzing}
+                onRefresh={() => currentPatient && loadPatientData(currentPatient.id)}
+                onManageMedication={() => setCurrentView('medication-setup')}
               />
             </>
           )}
@@ -397,6 +406,15 @@ function App() {
             />
           )}
 
+
+          {currentView === 'medication-setup' && currentPatient && (
+            <MedicationManager
+              patient={currentPatient}
+              onSave={() => loadPatientData(currentPatient.id)}
+              onBack={() => setCurrentView('patient-detail')}
+            />
+          )}
+
           {currentView === 'patient-form' && (
             <PatientForm
               onSave={handleSavePatient}
@@ -405,12 +423,8 @@ function App() {
           )}
 
           {currentView === 'settings' && (
-            <div className="flex items-center justify-center h-full text-slate-400">
-              <div className="text-center">
-                <Settings size={48} className="mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-medium">환경 설정</h3>
-                <p>시스템 설정 메뉴 준비중입니다.</p>
-              </div>
+            <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-50">
+              <Settings settings={clinicSettings} onSave={updateSettings} />
             </div>
           )}
         </div>
