@@ -12,7 +12,10 @@ import { PATIENT } from './mockData'; // Removed LAB_RESULTS, GROWTH_DATA
 import { LabResult, Patient } from './types';
 import { api } from './src/services/api';
 import { aiService } from './src/services/ai';
-import { loadStandardGrowthData } from './src/utils/growthStandards';
+import { getGrowthStandards } from './src/data/growthStandardsData';
+
+
+
 
 type View = 'dashboard' | 'patient-detail' | 'ocr' | 'report' | 'settings' | 'patient-form' | 'bone-age' | 'measurement-input';
 
@@ -76,16 +79,10 @@ function App() {
         };
       }).filter(Boolean);
 
-      // 2. Load Standard Data
-      const standardPoints = await loadStandardGrowthData(patient.gender);
+      // 2. Load Standard Data (Sync)
+      const standardPoints = getGrowthStandards(patient.gender);
 
       // 3. Merge Data
-      // We want a combined array sorted by age. 
-      // For chart smoothness, we use standard points as the base and insert patient points.
-      // Recharts connects nulls, so we don't necessarily need to interpolate P-values for patient points if we use connectNulls.
-      // However, to make the tooltip nice (showing P-values at patient age), interpolation is better.
-      // For now, let's just combine and sort; Recharts `connectNulls` is already on.
-
       const combinedData = [
         ...standardPoints.map(sp => ({
           age: sp.ageInYears,
