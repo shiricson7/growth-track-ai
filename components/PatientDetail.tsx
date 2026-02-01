@@ -144,39 +144,25 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   stroke="#64748b"
                   tickCount={8}
                 />
+                import {growthStandards} from '../src/utils/growthStandards'; // Adjust path if needed
+
+// ... inside component ...
+
+  React.useEffect(() => {
+                  growthStandards.load();
+  }, []);
+
+                // ...
+
                 <Tooltip
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   formatter={(value: number, name: string, props: any) => {
                     if (name === 'predicted') return [`${value.toFixed(1)} cm`, 'AI 예측'];
-                    if (name === 'height' || name === '환자 (Patient)') { // Check both potential names
-                      const data = props.payload;
-                      let percentileStr = '';
-
-                      if (data.refP3 && data.refP50 && data.refP97) {
-                        const h = Number(value);
-                        const p3 = data.refP3;
-                        const p50 = data.refP50;
-                        const p97 = data.refP97;
-
-                        // Approximate percentile logic
-                        let p = 50;
-                        if (h === p50) p = 50;
-                        else if (h < p3) p = 3 * (h / p3); // Crude extrapolation below P3
-                        else if (h > p97) p = 97 + (h - p97); // Crude extrapolation above P97
-                        else if (h < p50) {
-                          // Between P3 and P50
-                          p = 3 + ((h - p3) / (p50 - p3)) * (50 - 3);
-                        } else {
-                          // Between P50 and P97
-                          p = 50 + ((h - p50) / (p97 - p50)) * (97 - 50);
-                        }
-
-                        // Format
-                        if (h < p3) percentileStr = ` (< 3rd %)`;
-                        else if (h > p97) percentileStr = ` (> 97th %)`;
-                        else percentileStr = ` (${p.toFixed(0)}th %)`;
-                      }
-
+                    if (name === 'height' || name === '환자 (Patient)') {
+                      // Use LMS utility
+                      const age = props.payload.age;
+                      const percentile = growthStandards.calculatePercentile(patient.gender, age, value);
+                      const percentileStr = percentile ? ` (${percentile.toFixed(1)}th %)` : '';
                       return [`${value} cm${percentileStr}`, '환자 (Patient)'];
                     }
                     return [`${value} cm`, name];
@@ -199,6 +185,27 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               <p className="text-2xl font-bold text-slate-900">
                 {sortedMeasurements.find(m => m.height && m.height > 0)?.height || '-'}
                 <span className="text-sm font-normal text-slate-500 ml-1">cm</span>
+                {(() => {
+                  const latest = sortedMeasurements.find(m => m.height && m.height > 0);
+                  if (latest && latest.height) {
+                    // We need age at that measurement. derived from date?
+                    // measurement has `date`. patient has `dob`.
+                    // Calculate age at measurement time
+                    const mDate = new Date(latest.date);
+                    const dob = new Date(patient.dob);
+                    const ageYears = (mDate.getTime() - dob.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+                    const p = growthStandards.calculatePercentile(patient.gender, ageYears, latest.height);
+                    if (p) {
+                      return (
+                        <span className={`ml-2 text-sm px-2 py-0.5 rounded-full ${p < 3 || p > 97 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                          {p.toFixed(1)}th
+                        </span>
+                      );
+                    }
+                  }
+                  return null;
+                })()}
               </p>
               <p className="text-xs text-slate-400 mt-1">
                 {sortedMeasurements.find(m => m.height && m.height > 0)?.date || '기록 없음'}
