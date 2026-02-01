@@ -12,6 +12,8 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
   const [status, setStatus] = useState<'idle' | 'scanning' | 'review' | 'success'>('idle');
   const [scannedData, setScannedData] = useState<LabResult[]>([]);
 
+  const [collectionDate, setCollectionDate] = useState(new Date().toISOString().split('T')[0]);
+
   // Actual OCR processing using Gemini
   const handleFiles = async (files: FileList | null) => {
     if (files && files[0]) {
@@ -21,7 +23,7 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
         // Add IDs and dates to extracted data
         const processedData: LabResult[] = extractedData.map((item: any, index: number) => ({
           id: `ocr-${Date.now()}-${index}`,
-          date: new Date().toISOString().split('T')[0],
+          date: collectionDate, // Will be updated on save if user changes date
           parameter: item.parameter,
           value: item.value,
           unit: item.unit,
@@ -79,7 +81,7 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
   const addNewItem = () => {
     const newItem: LabResult = {
       id: `manual-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
+      date: collectionDate,
       parameter: '',
       value: 0,
       unit: '',
@@ -91,9 +93,12 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
   };
 
   const confirmData = () => {
-    // Remove the temporary flag before sending up if needed, or keep it depending on type definition
-    // For now we just pass it up. typestcript might complain if we don't cast or update type.
-    onResultsProcessed(scannedData);
+    // Apply collection date to all items
+    const finalData = scannedData.map(item => ({
+      ...item,
+      date: collectionDate
+    }));
+    onResultsProcessed(finalData);
     setStatus('success');
     setTimeout(() => setStatus('idle'), 2000);
   };
@@ -156,6 +161,16 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
             <span className="text-sm bg-blue-500 px-3 py-1 rounded-full">신뢰도: 98%</span>
           </div>
           <div className="p-6">
+            <div className="mb-6 bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <label className="block text-sm font-bold text-slate-700 mb-2">검체 채취일 (Sample Collection Date)</label>
+              <input
+                type="date"
+                value={collectionDate}
+                onChange={(e) => setCollectionDate(e.target.value)}
+                className="w-full md:w-auto px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
             <div className="flex items-center gap-2 mb-4 text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
               <Edit2 size={16} />
               <p className="text-sm font-medium">추출된 데이터가 원본과 일치하는지 확인하고, 필요시 수정해주세요.</p>

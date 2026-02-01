@@ -3,7 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText } from 'lucide-react';
 import { Patient, GrowthPoint, LabResult } from '../types';
 
-interface DashboardProps {
+interface PatientDetailProps {
   patient: Patient;
   growthData: GrowthPoint[];
   labResults: LabResult[];
@@ -13,7 +13,7 @@ interface DashboardProps {
   isAnalyzing: boolean;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({
+const PatientDetail: React.FC<PatientDetailProps> = ({
   patient,
   growthData,
   labResults,
@@ -96,6 +96,36 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="text-xs text-slate-500 uppercase font-semibold">유전적 목표 키 (Mid-P)</div>
               <div className="text-xl font-bold text-slate-600">{patient.targetHeight} cm</div>
             </div>
+          </div>
+        </div>
+
+        {/* Bone Age Chart */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800">
+              <Activity className="text-red-500" /> 골연령 성숙도 (Bone Age Maturity)
+            </h2>
+          </div>
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={growthData.filter(d => d.boneAge || d.percentile50)} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="age" type="number" domain={['dataMin', 'dataMax']} unit="세" stroke="#64748b" />
+                <YAxis dataKey="boneAge" domain={['auto', 'auto']} unit="세" stroke="#64748b" />
+                <Tooltip
+                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  formatter={(value: number, name: string) => [
+                    `${value}세`,
+                    name === 'boneAge' ? '골연령' : '실제나이'
+                  ]}
+                  labelFormatter={(label) => `실제나이: ${label}세`}
+                />
+                <Legend />
+                {/* Reference Line y=x */}
+                <Line type="monotone" dataKey="age" stroke="#cbd5e1" strokeDasharray="3 3" name="표준 성장 (1:1)" dot={false} />
+                <Line type="monotone" dataKey="boneAge" stroke="#ef4444" strokeWidth={3} name="환자 골연령" activeDot={{ r: 6 }} connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -202,4 +232,4 @@ const Dashboard: React.FC<DashboardProps> = ({
   );
 };
 
-export default Dashboard;
+export default PatientDetail;

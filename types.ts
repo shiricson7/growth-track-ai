@@ -47,6 +47,9 @@ export interface Patient {
   name: string;
   dob: string;
   gender: 'Male' | 'Female';
+  chartNumber?: string; // Hospital Chart Number
+  ssn?: string; // Resident Registration Number (RRN)
+  visitDate?: string; // Last Visit / Exam Date
   boneAge: number; // in years
   chronologicalAge: number; // in years
   predictedAdultHeight: number; // cm

@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, ScanLine, Settings, Menu, Bell, UserPlus, Search, User } from 'lucide-react';
-import Dashboard from './components/Dashboard';
+import { LayoutDashboard, FileText, ScanLine, Settings, Menu, Bell, UserPlus, Search, User, ChevronLeft, Ruler } from 'lucide-react';
+import PatientDetail from './components/PatientDetail';
+import PatientList from './components/PatientList';
 import LabOCR from './components/LabOCR';
 import ParentReport from './components/ParentReport';
 import PatientForm from './components/PatientForm';
-import { PATIENT, GROWTH_DATA, LAB_RESULTS } from './mockData';
+import BoneAgeReading from './components/BoneAgeReading';
+import { PATIENT, GROWTH_DATA } from './mockData'; // Removed LAB_RESULTS
 import { LabResult, Patient } from './types';
 import { api } from './src/services/api';
 import { aiService } from './src/services/ai';
 
-type View = 'dashboard' | 'ocr' | 'report' | 'settings' | 'patient-form';
+type View = 'dashboard' | 'patient-detail' | 'ocr' | 'report' | 'settings' | 'patient-form' | 'bone-age';
 
 function App() {
   /* Supabase & AI Integration */
   const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
   const [growthData, setGrowthData] = useState<any[]>(GROWTH_DATA); // Fallback to mock for graph structure if empty
@@ -30,23 +33,59 @@ function App() {
 
   const loadData = async () => {
     try {
-      const patients = await api.getPatients();
-      if (patients && patients.length > 0) {
-        setCurrentPatient(patients[0]);
-        // Load related data
-        const labs = await api.getLabResults(patients[0].id);
-        const measurements = await api.getMeasurements(patients[0].id);
-        setLabResults(labs);
-        // Transform measurements for chart if needed, for now keeping mock structure
-      } else {
-        // No patients found - show empty state
-        setCurrentPatient(null);
-        setLabResults([]);
-      }
+      const patientsList = await api.getPatients();
+      setPatients(patientsList || []);
     } catch (e) {
       console.error("Failed to load data", e);
-      setCurrentPatient(PATIENT);
+      // setPatients([PATIENT]); // Keep empty on error or use mock? Let's keep empty for now as per requirements.
     }
+  };
+
+  const loadPatientData = async (patientId: string) => {
+    try {
+      const labs = await api.getLabResults(patientId);
+      const measurements = await api.getMeasurements(patientId);
+
+      setLabResults(labs);
+
+      // Merge measurements into Growth Data
+      // 1. Start with standard curve (GROWTH_DATA)
+      // 2. Add patient measurements
+      // Real implementation would calculate exact age for each measurement
+      const patientData = measurements.map(m => {
+        const patient = patients.find(p => p.id === patientId);
+        if (!patient) return null;
+
+        const measureDate = new Date(m.date);
+        const birthDate = new Date(patient.dob);
+        const ageInYears = (measureDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+
+        return {
+          age: Number(ageInYears.toFixed(1)),
+          height: m.height === 0 ? undefined : m.height, // Avoid plotting 0 height
+          weight: m.weight,
+          boneAge: m.boneAge,
+          // Keep standard curves empty for these custom points so lines don't get messy
+          // or rely on the Chart to interpolate/ignore missing keys
+        };
+      }).filter(Boolean);
+
+      // Simple merge: Concat and sort by age
+      // Note: Recharts line chart handles disparate X values well? 
+      // Better to map them onto the same structure or just verify.
+      // For this demo, let's just append.
+      const combinedData = [...GROWTH_DATA, ...patientData!].sort((a: any, b: any) => a.age - b.age);
+      setGrowthData(combinedData);
+
+    } catch (e) {
+      console.error("Failed to load patient details", e);
+    }
+  };
+
+  const handleSelectPatient = async (patient: Patient) => {
+    setCurrentPatient(patient);
+    await loadPatientData(patient.id);
+    setCurrentView('patient-detail');
   };
 
   const handleAIAnalysis = async () => {
@@ -68,12 +107,29 @@ function App() {
   };
 
   const handleNewLabResults = async (newResults: LabResult[]) => {
-    // In real app, save to DB here
     if (currentPatient) {
-      // await api.addLabResults(...)
+      try {
+        // Assign Patient ID
+        const resultsToSave = newResults.map(r => ({
+          ...r,
+          patient_id: currentPatient.id
+        }));
+
+        await api.addLabResults(resultsToSave);
+        // Reload to get IDs and confirmed state
+        const updatedLabs = await api.getLabResults(currentPatient.id);
+        setLabResults(updatedLabs);
+        alert("검사 결과가 저장되었습니다.");
+        setCurrentView('patient-detail');
+      } catch (e) {
+        console.error("Failed to save labs", e);
+        alert("저장 중 오류가 발생했습니다.");
+      }
+    } else {
+      // Fallback for no patient selected (shouldn't happen due to guards)
+      setLabResults([...newResults, ...labResults]);
+      setCurrentView('patient-detail');
     }
-    setLabResults([...newResults, ...labResults]);
-    setCurrentView('dashboard');
   };
 
   const handleSavePatient = async (updatedPatient: Patient) => {
@@ -84,20 +140,61 @@ function App() {
       } else {
         await api.updatePatient(updatedPatient.id, updatedPatient);
       }
-      await loadData(); // Reload
-      setCurrentView('dashboard');
+      await loadData(); // Reload list
+      setCurrentView('dashboard'); // Return to list
     } catch (e) {
       console.error("Save failed", e);
       // Fallback for demo
-      setCurrentPatient(updatedPatient);
+      const newPatients = updatedPatient.id.startsWith('PT-')
+        ? [...patients, updatedPatient]
+        : patients.map(p => p.id === updatedPatient.id ? updatedPatient : p);
+      setPatients(newPatients);
       setCurrentView('dashboard');
     }
   };
 
+  const handleSaveBoneAge = async (boneAge: number, date: string) => {
+    if (!currentPatient) return;
+    try {
+      // 1. Update Patient's current Bone Age
+      const updatedPatient = { ...currentPatient, boneAge };
+      await api.updatePatient(currentPatient.id, updatedPatient);
+      setCurrentPatient(updatedPatient);
+
+      // 2. Create a Measurement entry
+      // WARNING: DB Schema requires height/weight. We use 0 or current as fallback for now.
+      // Ideally UI should ask for it or Schema should allow nulls.
+      // We will look for 0 height/weight in UI and hide/filter them.
+      await api.addMeasurement({
+        patient_id: currentPatient.id,
+        date: date,
+        boneAge: boneAge,
+        height: 0, // Placeholder
+        weight: 0 // Placeholder
+      });
+
+      alert(`골연령 ${boneAge}세 (측정일: ${date}) 저장되었습니다.`);
+      // Reload charts
+      await loadPatientData(currentPatient.id);
+      setCurrentView('patient-detail');
+    } catch (e) {
+      console.error("Failed to save bone age", e);
+      alert("저장 실패");
+    }
+  };
+
+  const handleSidebarClick = (view: View) => {
+    if ((view === 'ocr' || view === 'report' || view === 'bone-age') && !currentPatient) {
+      alert("먼저 환자를 선택해주세요.\n(Please select a patient first.)");
+      return;
+    }
+    setCurrentView(view);
+  };
+
   const SidebarItem = ({ view, icon: Icon, label }: { view: View; icon: React.ElementType; label: string }) => (
     <button
-      onClick={() => setCurrentView(view)}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentView === view
+      onClick={() => handleSidebarClick(view)}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${currentView === view || (view === 'dashboard' && currentView === 'patient-detail')
         ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
         : 'text-slate-600 hover:bg-slate-100'
         }`}
@@ -131,6 +228,7 @@ function App() {
             </button>
           </div>
           <SidebarItem view="dashboard" icon={LayoutDashboard} label="대시보드" />
+          <SidebarItem view="bone-age" icon={Ruler} label="골연령 판독" />
           <SidebarItem view="ocr" icon={ScanLine} label="결과지 스캔 (OCR)" />
           <SidebarItem view="report" icon={FileText} label="리포트 생성" />
         </nav>
@@ -157,22 +255,26 @@ function App() {
             <Menu />
           </button>
 
-          {/* Search Bar */}
+          {/* Search Bar - Only in Detail or other views since List has its own search */}
           <div className="hidden md:flex flex-1 max-w-xl ml-4 relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-slate-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="환자 이름, 등록번호 검색..."
-              className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm transition-colors"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            {currentView !== 'dashboard' && (
+              <>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search size={18} className="text-slate-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="환자 이름, 등록번호 검색..."
+                  className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm transition-colors"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100">
+            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${currentPatient ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
               <User size={14} />
               <span>현재 환자: {currentPatient ? currentPatient.name : '선택된 환자 없음'}</span>
             </div>
@@ -185,50 +287,52 @@ function App() {
 
         {/* View Content */}
         <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-50">
-          {currentView === 'dashboard' && currentPatient && (
-            <Dashboard
-              patient={currentPatient}
-              growthData={growthData}
-              labResults={labResults}
-              onGenerateReport={() => setCurrentView('report')}
-              aiAnalysis={aiAnalysis}
-              onAnalyzeGrowth={handleAIAnalysis}
-              isAnalyzing={isAnalyzing}
+          {currentView === 'dashboard' && (
+            <PatientList
+              patients={patients}
+              onSelectPatient={handleSelectPatient}
+              onRegisterNew={() => setCurrentView('patient-form')}
             />
           )}
 
-          {currentView === 'dashboard' && !currentPatient && (
-            <div className="flex flex-col items-center justify-center h-full animate-in fade-in zoom-in duration-500">
+          {currentView === 'patient-detail' && currentPatient && (
+            <>
               <button
-                onClick={() => setCurrentView('patient-form')}
-                className="relative group cursor-pointer transition-transform hover:scale-105 focus:outline-none"
+                onClick={() => setCurrentView('dashboard')}
+                className="mb-4 flex items-center gap-1 text-slate-500 hover:text-blue-600 transition-colors"
               >
-                <img
-                  src="/empty_placeholder.jpeg"
-                  alt="No patients found - Click to register"
-                  className="max-w-md w-full rounded-2xl shadow-xl border-4 border-white object-cover"
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-2xl">
-                  <div className="bg-white/90 px-6 py-3 rounded-full font-bold text-slate-900 shadow-lg flex items-center gap-2">
-                    <UserPlus size={20} className="text-blue-600" />
-                    신규 환자 등록하기
-                  </div>
-                </div>
+                <ChevronLeft size={20} />
+                환자 목록으로 돌아가기
               </button>
-              <p className="mt-6 text-slate-500 text-lg font-medium">등록된 환자가 없습니다.</p>
-              <p className="text-slate-400 text-sm">이미지를 클릭하여 첫 번째 환자를 등록하세요.</p>
-            </div>
+              <PatientDetail
+                patient={currentPatient}
+                growthData={growthData}
+                labResults={labResults}
+                onGenerateReport={() => setCurrentView('report')}
+                aiAnalysis={aiAnalysis}
+                onAnalyzeGrowth={handleAIAnalysis}
+                isAnalyzing={isAnalyzing}
+              />
+            </>
           )}
 
           {currentView === 'ocr' && (
             <LabOCR onResultsProcessed={handleNewLabResults} />
           )}
 
+          {currentView === 'bone-age' && currentPatient && (
+            <BoneAgeReading
+              patient={currentPatient}
+              onSave={handleSaveBoneAge}
+              onCancel={() => setCurrentView('patient-detail')}
+            />
+          )}
+
           {currentView === 'report' && currentPatient && (
             <ParentReport
               patient={currentPatient}
               growthData={GROWTH_DATA}
-              onBack={() => setCurrentView('dashboard')}
+              onBack={() => setCurrentView('patient-detail')}
             />
           )}
 
