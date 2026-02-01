@@ -8,7 +8,7 @@ import ParentReport from './components/ParentReport';
 import PatientForm from './components/PatientForm';
 import BoneAgeReading from './components/BoneAgeReading';
 import MeasurementInput from './components/MeasurementInput';
-import { PATIENT, GROWTH_DATA } from './mockData'; // Removed LAB_RESULTS
+import { PATIENT } from './mockData'; // Removed LAB_RESULTS, GROWTH_DATA
 import { LabResult, Patient } from './types';
 import { api } from './src/services/api';
 import { aiService } from './src/services/ai';
@@ -21,7 +21,7 @@ function App() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
-  const [growthData, setGrowthData] = useState<any[]>(GROWTH_DATA); // Fallback to mock for graph structure if empty
+  const [growthData, setGrowthData] = useState<any[]>([]); // Initialize empty
   const [searchQuery, setSearchQuery] = useState('');
 
   // AI State
@@ -53,14 +53,6 @@ function App() {
       setLabResults(labs);
       setMeasurements(meas);
 
-      // Merge measurements into Growth Data
-      // 1. Start with standard curve (GROWTH_DATA) but REMOVE mock 'height' values
-      //    so they don't conflict with real patient data.
-      const baseData = GROWTH_DATA.map(d => {
-        const { height, ...rest } = d; // Strip 'height' from mock standard curves
-        return rest;
-      });
-
       // 2. Add patient measurements
       // Real implementation would calculate exact age for each measurement
       const patientData = meas.map(m => {
@@ -81,8 +73,8 @@ function App() {
         };
       }).filter(Boolean);
 
-      // Simple merge: Concat and sort by age
-      const combinedData = [...baseData, ...patientData!].sort((a: any, b: any) => a.age - b.age);
+      // Sort by age
+      const combinedData = [...patientData!].sort((a: any, b: any) => a.age - b.age);
       setGrowthData(combinedData);
 
     } catch (e) {
@@ -366,7 +358,7 @@ function App() {
           {currentView === 'report' && currentPatient && (
             <ParentReport
               patient={currentPatient}
-              growthData={GROWTH_DATA}
+              growthData={growthData}
               onBack={() => setCurrentView('patient-detail')}
             />
           )}
