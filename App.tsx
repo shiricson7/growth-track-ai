@@ -12,6 +12,7 @@ import { PATIENT } from './mockData'; // Removed LAB_RESULTS, GROWTH_DATA
 import { LabResult, Patient } from './types';
 import { api } from './src/services/api';
 import { aiService } from './src/services/ai';
+import { loadStandardGrowthData } from './src/utils/growthStandards';
 
 type View = 'dashboard' | 'patient-detail' | 'ocr' | 'report' | 'settings' | 'patient-form' | 'bone-age' | 'measurement-input';
 
