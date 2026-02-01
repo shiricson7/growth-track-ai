@@ -1,17 +1,19 @@
+
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, ScanLine, Settings, Menu, Bell, UserPlus, Search, User, ChevronLeft, Ruler } from 'lucide-react';
+import { LayoutDashboard, FileText, ScanLine, Settings, Menu, Bell, UserPlus, Search, User, ChevronLeft, Ruler, Activity } from 'lucide-react';
 import PatientDetail from './components/PatientDetail';
 import PatientList from './components/PatientList';
 import LabOCR from './components/LabOCR';
 import ParentReport from './components/ParentReport';
 import PatientForm from './components/PatientForm';
 import BoneAgeReading from './components/BoneAgeReading';
+import MeasurementInput from './components/MeasurementInput';
 import { PATIENT, GROWTH_DATA } from './mockData'; // Removed LAB_RESULTS
 import { LabResult, Patient } from './types';
 import { api } from './src/services/api';
 import { aiService } from './src/services/ai';
 
-type View = 'dashboard' | 'patient-detail' | 'ocr' | 'report' | 'settings' | 'patient-form' | 'bone-age';
+type View = 'dashboard' | 'patient-detail' | 'ocr' | 'report' | 'settings' | 'patient-form' | 'bone-age' | 'measurement-input';
 
 function App() {
   /* Supabase & AI Integration */
@@ -63,7 +65,7 @@ function App() {
         return {
           age: Number(ageInYears.toFixed(1)),
           height: m.height === 0 ? undefined : m.height, // Avoid plotting 0 height
-          weight: m.weight,
+          weight: m.weight === 0 ? undefined : m.weight,
           boneAge: m.boneAge,
           // Keep standard curves empty for these custom points so lines don't get messy
           // or rely on the Chart to interpolate/ignore missing keys
@@ -162,14 +164,11 @@ function App() {
       setCurrentPatient(updatedPatient);
 
       // 2. Create a Measurement entry
-      // WARNING: DB Schema requires height/weight. We use 0 or current as fallback for now.
-      // Ideally UI should ask for it or Schema should allow nulls.
-      // We will look for 0 height/weight in UI and hide/filter them.
       await api.addMeasurement({
         patient_id: currentPatient.id,
         date: date,
         boneAge: boneAge
-        // height/weight are now optional
+        // height/weight are optional
       });
 
       alert(`골연령 ${boneAge}세 (측정일: ${date}) 저장되었습니다.`);
@@ -182,8 +181,29 @@ function App() {
     }
   };
 
+  const handleSaveMeasurement = async (date: string, height: number, weight: number) => {
+    if (!currentPatient) return;
+    try {
+      await api.addMeasurement({
+        patient_id: currentPatient.id,
+        date: date,
+        height: height,
+        weight: weight
+      });
+
+      alert(`신체 계측 (신장 ${height}cm, 체중 ${weight}kg) 저장되었습니다.`);
+
+      // Reload data
+      await loadPatientData(currentPatient.id);
+      setCurrentView('patient-detail');
+    } catch (e) {
+      console.error("Failed to save measurement", e);
+      alert("저장 실패");
+    }
+  };
+
   const handleSidebarClick = (view: View) => {
-    if ((view === 'ocr' || view === 'report' || view === 'bone-age') && !currentPatient) {
+    if ((view === 'ocr' || view === 'report' || view === 'bone-age' || view === 'measurement-input') && !currentPatient) {
       alert("먼저 환자를 선택해주세요.\n(Please select a patient first.)");
       return;
     }
@@ -227,6 +247,7 @@ function App() {
             </button>
           </div>
           <SidebarItem view="dashboard" icon={LayoutDashboard} label="대시보드" />
+          <SidebarItem view="measurement-input" icon={Activity} label="신체 계측 (방문)" />
           <SidebarItem view="bone-age" icon={Ruler} label="골연령 판독" />
           <SidebarItem view="ocr" icon={ScanLine} label="결과지 스캔 (OCR)" />
           <SidebarItem view="report" icon={FileText} label="리포트 생성" />
@@ -323,6 +344,14 @@ function App() {
             <BoneAgeReading
               patient={currentPatient}
               onSave={handleSaveBoneAge}
+              onCancel={() => setCurrentView('patient-detail')}
+            />
+          )}
+
+          {currentView === 'measurement-input' && currentPatient && (
+            <MeasurementInput
+              patient={currentPatient}
+              onSave={handleSaveMeasurement}
               onCancel={() => setCurrentView('patient-detail')}
             />
           )}
