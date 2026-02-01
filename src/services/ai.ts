@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(API_KEY || "");
 export const aiService = {
     async analyzeGrowth(patientData: any, measurements: any[], labResults: any[]) {
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Fast model for data analysis
+            const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
             const prompt = `
         You are an expert pediatric endocrinologist. Analyze the following patient data and provide a clinical assessment.
@@ -55,9 +55,7 @@ export const aiService = {
 
     async generateParentReport(patient: any, recentLabs: any[], meds: any[]) {
         try {
-            const model = genAI.getGenerativeModel({ model: "demo-gemini-3-flash" }); // Using flash for speed/cost or Pro for quality. User requested 'Intelligent', let's use Pro if available or standard. 
-            // Note: The previous code used 'gemini-3-flash-preview', I will stick to that or 'gemini-1.5-pro' if stable. 
-            // Let's use the same model key as `analyzeGrowth`.
+            const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
             const prompt = `
                 You are a highly empathetic and professional Pediatric Endocrinologist (소아내분비 전문의).
