@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(API_KEY || "");
 export const aiService = {
     async analyzeGrowth(patientData: any, measurements: any[], labResults: any[]) {
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" }); // Using 1.5 Pro as requested (mapped to latest)
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Fast model for data analysis
 
             const prompt = `
         You are an expert pediatric endocrinologist. Analyze the following patient data and provide a clinical assessment.
