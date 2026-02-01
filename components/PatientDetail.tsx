@@ -292,21 +292,23 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               </button>
             </h2>
             <div className="space-y-3">
-              {patient.medications.map((med, idx) => (
-                <div key={idx} className="p-3 rounded-lg border border-slate-100 bg-slate-50 hover:border-blue-200 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${med.type === 'GH' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
-                      {med.type}
-                    </span>
-                    <span className="text-xs text-slate-500">시작일: {med.startDate}</span>
+              {patient.medications
+                .filter(med => med.status !== 'completed') // Hide completed meds
+                .map((med, idx) => (
+                  <div key={idx} className="p-3 rounded-lg border border-slate-100 bg-slate-50 hover:border-blue-200 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${med.type === 'GH' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                        {med.type}
+                      </span>
+                      <span className="text-xs text-slate-500">시작일: {med.startDate}</span>
+                    </div>
+                    <h3 className="font-semibold text-slate-900 mt-2">{med.name}</h3>
+                    <div className="text-sm text-slate-600 mt-1 flex justify-between">
+                      <span>{med.dosage}</span>
+                      <span>{med.frequency}</span>
+                    </div>
                   </div>
-                  <h3 className="font-semibold text-slate-900 mt-2">{med.name}</h3>
-                  <div className="text-sm text-slate-600 mt-1 flex justify-between">
-                    <span>{med.dosage}</span>
-                    <span>{med.frequency}</span>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
 
