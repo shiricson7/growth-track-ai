@@ -237,7 +237,21 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
                 <span className="absolute right-3 top-2 text-slate-400 text-sm">kg</span>
               </div>
             </div>
-            {/* Bone Age Input Removed as per requirements */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">골연령 (Bone Age)</label>
+              <div className="relative">
+                <input
+                  type="number"
+                  step="0.1"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                  value={formData.boneAge || ''}
+                  onChange={e => setFormData({ ...formData, boneAge: parseFloat(e.target.value) })}
+                  placeholder="0.0"
+                />
+                <span className="absolute right-3 top-2 text-slate-400 text-sm">세</span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">입력 시 환자 정보의 현재 골연령이 업데이트됩니다.</p>
+            </div>
           </div>
         </section>
 

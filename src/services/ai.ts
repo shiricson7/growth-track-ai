@@ -58,7 +58,7 @@ export const aiService = {
             const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
             const prompt = `
-                You are a highly empathetic and professional Pediatric Endocrinologist (소아내분비 전문의).
+                You are a highly empathetic and professional Growth Specialist (성장 전문의).
                 Your task is to write a "Growth Report for Guardians" (보호자용 리포트) based on the patient's data.
 
                 **Tone & Style**:
