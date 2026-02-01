@@ -119,9 +119,9 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   labelFormatter={(label) => `${label}세`}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="percentile50" stroke="#cbd5e1" strokeDasharray="5 5" name="평균 (50th %)" dot={false} strokeWidth={2} connectNulls />
-                <Line type="monotone" dataKey="percentile97" stroke="#e2e2f0" strokeDasharray="3 3" name="97th %" dot={false} connectNulls />
-                <Line type="monotone" dataKey="percentile3" stroke="#e2e2f0" strokeDasharray="3 3" name="3rd %" dot={false} connectNulls />
+                <Line type="monotone" dataKey="percentile50" stroke="#059669" strokeDasharray="5 5" name="평균 (50th %)" dot={false} strokeWidth={2} connectNulls />
+                <Line type="monotone" dataKey="percentile97" stroke="#34d399" strokeDasharray="3 3" name="97th %" dot={false} connectNulls />
+                <Line type="monotone" dataKey="percentile3" stroke="#34d399" strokeDasharray="3 3" name="3rd %" dot={false} connectNulls />
                 <Line type="monotone" dataKey="height" stroke="#2563eb" strokeWidth={3} name="환자 (Patient)" activeDot={{ r: 6 }} connectNulls />
                 <Line type="monotone" dataKey="predicted" stroke="#7c3aed" strokeWidth={2} strokeDasharray="5 5" name="AI 예측 (Predicted)" />
               </LineChart>
