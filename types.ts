@@ -33,6 +33,7 @@ export interface Measurement {
 }
 
 export interface Medication {
+  id?: string; // Added for DB identification
   name: string;
   type: 'GH' | 'GnRH'; // Growth Hormone or GnRH Agonist
   dosage: string;

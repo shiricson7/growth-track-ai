@@ -11,38 +11,67 @@ interface MedicationManagerProps {
 
 const MedicationManager: React.FC<MedicationManagerProps> = ({ patient, onSave, onBack }) => {
     const [medications, setMedications] = useState<Medication[]>(patient.medications || []);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [newMed, setNewMed] = useState<Partial<Medication>>({
         type: 'GH',
         status: 'active',
         startDate: new Date().toISOString().split('T')[0]
     });
 
-    const handleAdd = async () => {
+    const handleSave = async () => {
         if (!newMed.name || !newMed.dosage || !newMed.frequency) {
             alert("모든 필수 항목을 입력해주세요.");
             return;
         }
 
         try {
-            await api.addMedication(patient.id, newMed);
-            alert("투약 정보가 추가되었습니다.");
+            if (editingId) {
+                await api.updateMedication(editingId, newMed);
+                alert("처방 정보가 수정되었습니다.");
+            } else {
+                await api.addMedication(patient.id, newMed);
+                alert("투약 정보가 추가되었습니다.");
+            }
             onSave(); // Reload parent data
-            // Reset form
-            setNewMed({
-                type: 'GH',
-                status: 'active',
-                startDate: new Date().toISOString().split('T')[0],
-                name: '',
-                dosage: '',
-                frequency: ''
-            });
-
-            // Optimistic update for UI
-            setMedications([...medications, newMed as Medication]);
+            resetForm();
         } catch (e) {
             console.error(e);
             alert("저장 실패");
         }
+    };
+
+    const handleEdit = (med: Medication) => {
+        if (!med.id) return;
+        setEditingId(med.id);
+        setNewMed({ ...med });
+        // Scroll to form if needed
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("정말 삭제하시겠습니까? (삭제 후 복구 불가)")) return;
+        try {
+            await api.deleteMedication(id);
+            alert("삭제되었습니다.");
+            onSave();
+            // Optimistic update
+            setMedications(medications.filter(m => m.id !== id));
+        } catch (e) {
+            console.error(e);
+            alert("삭제 실패");
+        }
+    };
+
+    const resetForm = () => {
+        setEditingId(null);
+        setNewMed({
+            type: 'GH',
+            status: 'active',
+            startDate: new Date().toISOString().split('T')[0],
+            name: '',
+            dosage: '',
+            frequency: ''
+        });
     };
 
     return (
@@ -57,7 +86,7 @@ const MedicationManager: React.FC<MedicationManagerProps> = ({ patient, onSave, 
             {/* Add New Medication */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h2 className="text-lg font-bold flex items-center gap-2 mb-4 text-slate-800">
-                    <Plus size={20} className="text-blue-600" /> 신규 처방 추가
+                    <Plus size={20} className="text-blue-600" /> {editingId ? '처방 수정' : '신규 처방 추가'}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -123,13 +152,21 @@ const MedicationManager: React.FC<MedicationManagerProps> = ({ patient, onSave, 
                         </select>
                     </div>
                 </div>
-                <div className="mt-4 flex justify-end">
+                <div className="mt-4 flex justify-end gap-2">
+                    {editingId && (
+                        <button
+                            onClick={resetForm}
+                            className="bg-white border border-slate-300 text-slate-600 px-6 py-2 rounded-lg font-bold hover:bg-slate-50 transition-colors"
+                        >
+                            취소
+                        </button>
+                    )}
                     <button
-                        onClick={handleAdd}
+                        onClick={handleSave}
                         className="bg-slate-900 text-white px-6 py-2 rounded-lg font-bold hover:bg-slate-800 transition-colors flex items-center gap-2"
                     >
                         <Save size={18} />
-                        처방 저장
+                        {editingId ? '수정 저장' : '처방 저장'}
                     </button>
                 </div>
             </div>
@@ -149,14 +186,15 @@ const MedicationManager: React.FC<MedicationManagerProps> = ({ patient, onSave, 
                             <th className="px-6 py-3">용량/빈도</th>
                             <th className="px-6 py-3">기간</th>
                             <th className="px-6 py-3">상태</th>
+                            <th className="px-6 py-3">관리</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {medications.length === 0 ? (
-                            <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-400">등록된 투약 정보가 없습니다.</td></tr>
+                            <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-400">등록된 투약 정보가 없습니다.</td></tr>
                         ) : (
                             medications.map((m, idx) => (
-                                <tr key={idx} className="hover:bg-slate-50">
+                                <tr key={idx} className={`hover:bg-slate-50 ${editingId === m.id ? 'bg-blue-50' : ''}`}>
                                     <td className="px-6 py-4">
                                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${m.type === 'GH' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
                                             {m.type}
@@ -169,6 +207,22 @@ const MedicationManager: React.FC<MedicationManagerProps> = ({ patient, onSave, 
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${m.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
                                             {m.status === 'active' ? '진행 중' : '종료됨'}
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleEdit(m)}
+                                                className="text-blue-600 hover:text-blue-800 font-medium text-xs px-2 py-1 bg-blue-50 rounded"
+                                            >
+                                                수정
+                                            </button>
+                                            <button
+                                                onClick={() => m.id && handleDelete(m.id)}
+                                                className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))

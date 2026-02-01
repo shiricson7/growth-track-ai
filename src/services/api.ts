@@ -233,6 +233,7 @@ export const api = {
         if (error) throw error;
 
         return data.map((m: any) => ({
+            id: m.id, // Map ID
             name: m.name,
             type: m.type,
             dosage: m.dosage,
@@ -258,6 +259,34 @@ export const api = {
         const { error } = await supabase
             .from('medications')
             .insert([dbMed]);
+
+        if (error) throw error;
+    },
+
+    async updateMedication(id: string, med: any) {
+        const dbMed = {
+            name: med.name,
+            type: med.type,
+            dosage: med.dosage,
+            frequency: med.frequency,
+            start_date: med.startDate,
+            end_date: med.endDate || null,
+            status: med.status
+        };
+
+        const { error } = await supabase
+            .from('medications')
+            .update(dbMed)
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
+    async deleteMedication(id: string) {
+        const { error } = await supabase
+            .from('medications')
+            .delete()
+            .eq('id', id);
 
         if (error) throw error;
     }
