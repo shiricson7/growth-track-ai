@@ -94,8 +94,21 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={growthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="age" type="number" domain={['dataMin', 'dataMax']} unit="세" stroke="#64748b" tickCount={8} />
-                <YAxis domain={['auto', 'auto']} unit="cm" stroke="#64748b" />
+                <XAxis
+                  dataKey="age"
+                  type="number"
+                  domain={[0, 19]}
+                  unit="세"
+                  stroke="#64748b"
+                  tickCount={10}
+                  ticks={[0, 2, 4, 6, 8, 10, 12, 14, 16, 18]}
+                />
+                <YAxis
+                  domain={[40, 190]}
+                  unit="cm"
+                  stroke="#64748b"
+                  tickCount={8}
+                />
                 <Tooltip
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   formatter={(value: number, name: string) => {

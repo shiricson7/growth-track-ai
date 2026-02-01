@@ -9,8 +9,14 @@ export interface StandardGrowthPoint {
 
 export const loadStandardGrowthData = async (gender: 'Male' | 'Female'): Promise<StandardGrowthPoint[]> => {
     try {
+        console.log(`[GrowthStandard] Fetching CSV for ${gender}...`);
         const response = await fetch('/height_chart_LMS.csv');
+        if (!response.ok) {
+            console.error(`[GrowthStandard] Failed to fetch CSV: ${response.status} ${response.statusText}`);
+            return [];
+        }
         const csvText = await response.text();
+        // console.log(`[GrowthStandard] CSV Length: ${csvText.length}`); // Debug log
         const lines = csvText.split('\n').filter(line => line.trim() !== '');
 
         // Skip first 2 header lines
@@ -22,8 +28,12 @@ export const loadStandardGrowthData = async (gender: 'Male' | 'Female'): Promise
             const cols = line.split(',');
             if (cols.length < 18) return;
 
-            const rowGender = cols[0].trim() === '1' ? 'Male' : 'Female';
-            if (rowGender !== gender) return;
+            const genderCode = cols[0].trim();
+            let rowGender: 'Male' | 'Female' | null = null;
+            if (genderCode === '1') rowGender = 'Male';
+            else if (genderCode === '2') rowGender = 'Female';
+
+            if (!rowGender || rowGender !== gender) return;
 
             const ageInMonths = parseFloat(cols[2]);
             // Col 7 = 3rd, Col 12 = 50th, Col 17 = 97th
