@@ -168,9 +168,8 @@ function App() {
       await api.addMeasurement({
         patient_id: currentPatient.id,
         date: date,
-        boneAge: boneAge,
-        height: 0, // Placeholder
-        weight: 0 // Placeholder
+        boneAge: boneAge
+        // height/weight are now optional
       });
 
       alert(`골연령 ${boneAge}세 (측정일: ${date}) 저장되었습니다.`);

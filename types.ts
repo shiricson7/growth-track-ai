@@ -22,8 +22,8 @@ export interface Measurement {
   id: string;
   patient_id: string;
   date: string;
-  height: number;
-  weight: number;
+  height?: number; // Optional
+  weight?: number; // Optional
   bone_age?: number; // DB uses snake_case usually but JS prefers camel. I'll stick to DB column names or map them.
   // In `api.ts`, supabase returns DB columns. 
   // Let's use snake_case for DB types or rely on supabase data mapping.

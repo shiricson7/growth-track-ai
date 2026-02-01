@@ -23,6 +23,25 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   isAnalyzing
 }) => {
 
+  /* Lab History State */
+  const [labViewMode, setLabViewMode] = React.useState<'list' | 'trend'>('list');
+  const [selectedParameter, setSelectedParameter] = React.useState<string>('');
+
+  // Extract unique parameters for dropdown
+  const availableParameters = Array.from(new Set(labResults.map(l => l.parameter))).sort();
+
+  // Set default parameter if not selected and available
+  React.useEffect(() => {
+    if (!selectedParameter && availableParameters.length > 0) {
+      setSelectedParameter(availableParameters[0]);
+    }
+  }, [availableParameters, selectedParameter]);
+
+  // Filter data for trend chart
+  const trendData = labResults
+    .filter(l => l.parameter === selectedParameter)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Patient Header Card */}
@@ -86,7 +105,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           <div className="mt-4 grid grid-cols-3 gap-4 text-center">
             <div className="p-3 bg-slate-50 rounded-lg">
               <div className="text-xs text-slate-500 uppercase font-semibold">현재 신장</div>
-              <div className="text-xl font-bold text-slate-900">{growthData[5].height} cm</div>
+              <div className="text-xl font-bold text-slate-900">{growthData[5]?.height || '-'} cm</div>
             </div>
             <div className="p-3 bg-slate-50 rounded-lg">
               <div className="text-xs text-slate-500 uppercase font-semibold">예측 성인 키 (PAH)</div>
@@ -189,44 +208,99 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
         </div>
       </div>
 
-      {/* Recent Labs */}
+      {/* Recent Labs & Trends */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-          <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800">
-            <Activity className="text-teal-600" /> 최근 혈액 검사 (Recent Lab Results)
-          </h2>
-          <span className="text-sm text-slate-500">검사일: 2024-05-20</span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
-              <tr>
-                <th className="px-6 py-3">항목 (Parameter)</th>
-                <th className="px-6 py-3">결과값 (Result)</th>
-                <th className="px-6 py-3">참고치 (Reference)</th>
-                <th className="px-6 py-3">상태 (Status)</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {labResults.map((lab) => (
-                <tr key={lab.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-slate-900">{lab.parameter}</td>
-                  <td className="px-6 py-4">{lab.value} <span className="text-slate-400 text-xs">{lab.unit}</span></td>
-                  <td className="px-6 py-4 text-slate-500">{lab.referenceRange}</td>
-                  <td className="px-6 py-4">
-                    {lab.status === 'normal' ? (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Normal</span>
-                    ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        <AlertCircle size={12} className="mr-1" /> {lab.status.toUpperCase()}
-                      </span>
-                    )}
-                  </td>
-                </tr>
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800">
+              <Activity className="text-teal-600" /> 혈액 검사 기록 (Lab History)
+            </h2>
+            <div className="flex bg-slate-100 p-1 rounded-lg">
+              <button
+                onClick={() => setLabViewMode('list')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${labViewMode === 'list' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                목록 (List)
+              </button>
+              <button
+                onClick={() => setLabViewMode('trend')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${labViewMode === 'trend' ? 'bg-white shadow text-slate-900' : 'text-slate-500 hover:text-slate-900'}`}
+              >
+                추세 (Trend)
+              </button>
+            </div>
+          </div>
+          {labViewMode === 'trend' && (
+            <select
+              value={selectedParameter}
+              onChange={(e) => setSelectedParameter(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2"
+            >
+              {availableParameters.map(p => (
+                <option key={p} value={p}>{p}</option>
               ))}
-            </tbody>
-          </table>
+            </select>
+          )}
         </div>
+
+        {labViewMode === 'list' ? (
+          <div className="overflow-x-auto max-h-[400px]">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-slate-50 text-slate-500 uppercase text-xs sticky top-0 bg-slate-50">
+                <tr>
+                  <th className="px-6 py-3">날짜 (Date)</th>
+                  <th className="px-6 py-3">항목 (Parameter)</th>
+                  <th className="px-6 py-3">결과값 (Result)</th>
+                  <th className="px-6 py-3">참고치 (Reference)</th>
+                  <th className="px-6 py-3">상태 (Status)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {labResults.length === 0 ? (
+                  <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-400">검사 결과가 없습니다.</td></tr>
+                ) : (
+                  labResults.map((lab) => (
+                    <tr key={lab.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4 text-slate-500 whitespace-nowrap">{lab.date}</td>
+                      <td className="px-6 py-4 font-medium text-slate-900">{lab.parameter}</td>
+                      <td className="px-6 py-4">{lab.value} <span className="text-slate-400 text-xs">{lab.unit}</span></td>
+                      <td className="px-6 py-4 text-slate-500">{lab.referenceRange}</td>
+                      <td className="px-6 py-4">
+                        {lab.status === 'normal' ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Normal</span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <AlertCircle size={12} className="mr-1" /> {lab.status.toUpperCase()}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-6 h-[300px] w-full">
+            {trendData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="date" stroke="#64748b" />
+                  <YAxis domain={['auto', 'auto']} stroke="#64748b" />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    formatter={(value: number) => [value, selectedParameter]}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="value" stroke="#0d9488" strokeWidth={3} name={selectedParameter} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-400">데이터가 없습니다.</div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -21,8 +21,8 @@ create table if not exists measurements (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   patient_id uuid references patients(id) on delete cascade not null,
   date date not null,
-  height numeric not null,
-  weight numeric not null,
+  height numeric, -- optional
+  weight numeric, -- optional
   bone_age numeric, -- Bone age in years
   measured_by text
 );
