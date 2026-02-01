@@ -1,4 +1,4 @@
-import Papa from 'papaparse'; // Typically we might need a CSV parser, but simple split is fine for this structure to avoid deps if possible, but let's check package.json if we have papa parse or just do raw string split. 
+// Simple CSV parser logic used instead of heavy library 
 // I'll stick to raw string split to minimize dependency issues unless I see it in package.json.
 // However, the CSV might have complex quoting? The `grep` output looked simple.
 // "2,0,0,1.0000 ,..." 

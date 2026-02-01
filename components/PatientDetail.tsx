@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText, ClipboardList, Ruler } from 'lucide-react';
 import { Patient, GrowthPoint, LabResult, Measurement } from '../types';
 
+import { growthStandards } from '../src/utils/growthStandards';
 import BoneAgeHistory from './BoneAgeHistory';
 
 interface PatientDetailProps {
@@ -56,6 +57,11 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   const trendData = labResults
     .filter(l => l.parameter === selectedParameter)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Load growth standards
+  React.useEffect(() => {
+    growthStandards.load();
+  }, []);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -144,15 +150,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   stroke="#64748b"
                   tickCount={8}
                 />
-                import {growthStandards} from '../src/utils/growthStandards'; // Adjust path if needed
 
-// ... inside component ...
-
-  React.useEffect(() => {
-                  growthStandards.load();
-  }, []);
-
-                // ...
 
                 <Tooltip
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
