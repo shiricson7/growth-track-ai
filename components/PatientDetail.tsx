@@ -10,6 +10,7 @@ interface PatientDetailProps {
   measurements: Measurement[]; // New prop
   onGenerateReport: () => void;
   aiAnalysis: string[] | null;
+  aiPredictedHeight?: number; // New prop
   onAnalyzeGrowth: () => void;
   isAnalyzing: boolean;
 }
@@ -21,6 +22,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   measurements,
   onGenerateReport,
   aiAnalysis,
+  aiPredictedHeight,
   onAnalyzeGrowth,
   isAnalyzing
 }) => {
@@ -61,7 +63,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               <h1 className="text-2xl font-bold text-slate-900">{patient.name}</h1>
               <div className="flex gap-4 text-sm text-slate-500 mt-1">
                 <span className="flex items-center gap-1"><Calendar size={14} /> 생년월일: {patient.dob} (만 {patient.chronologicalAge}세)</span>
-                <span className="flex items-center gap-1"><Activity size={14} /> 골연령: <span className="text-red-500 font-semibold">{patient.boneAge}세</span></span>
+                <span className="flex items-center gap-1"><Activity size={14} /> 골연령: <span className="text-red-500 font-semibold">{sortedMeasurements.find(m => m.boneAge && m.boneAge > 0)?.boneAge || patient.boneAge}세</span></span>
               </div>
             </div>
           </div>
@@ -104,26 +106,51 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   labelFormatter={(label) => `${label}세`}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="percentile50" stroke="#cbd5e1" strokeDasharray="5 5" name="평균 (50th %)" dot={false} strokeWidth={2} />
-                <Line type="monotone" dataKey="percentile97" stroke="#e2e8f0" strokeDasharray="3 3" name="97th %" dot={false} />
-                <Line type="monotone" dataKey="percentile3" stroke="#e2e8f0" strokeDasharray="3 3" name="3rd %" dot={false} />
+                <Line type="monotone" dataKey="percentile50" stroke="#cbd5e1" strokeDasharray="5 5" name="평균 (50th %)" dot={false} strokeWidth={2} connectNulls />
+                <Line type="monotone" dataKey="percentile97" stroke="#e2e2f0" strokeDasharray="3 3" name="97th %" dot={false} connectNulls />
+                <Line type="monotone" dataKey="percentile3" stroke="#e2e2f0" strokeDasharray="3 3" name="3rd %" dot={false} connectNulls />
                 <Line type="monotone" dataKey="height" stroke="#2563eb" strokeWidth={3} name="환자 (Patient)" activeDot={{ r: 6 }} connectNulls />
                 <Line type="monotone" dataKey="predicted" stroke="#7c3aed" strokeWidth={2} strokeDasharray="5 5" name="AI 예측 (Predicted)" />
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <div className="text-xs text-slate-500 uppercase font-semibold">현재 신장</div>
-              <div className="text-xl font-bold text-slate-900">{growthData[5]?.height || '-'} cm</div>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <p className="text-xs text-blue-600 font-bold mb-1">현재 키 (Current Height)</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {sortedMeasurements.find(m => m.height && m.height > 0)?.height || '-'}
+                <span className="text-sm font-normal text-slate-500 ml-1">cm</span>
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {sortedMeasurements.find(m => m.height && m.height > 0)?.date || '기록 없음'}
+              </p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <div className="text-xs text-slate-500 uppercase font-semibold">예측 성인 키 (PAH)</div>
-              <div className="text-xl font-bold text-purple-600">{patient.predictedAdultHeight} cm</div>
+            <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+              <p className="text-xs text-purple-600 font-bold mb-1">골연령 (Bone Age)</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {sortedMeasurements.find(m => m.boneAge && m.boneAge > 0)?.boneAge || patient.boneAge}
+                <span className="text-sm font-normal text-slate-500 ml-1">세</span>
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {sortedMeasurements.find(m => m.boneAge && m.boneAge > 0)?.date ? '최신 측정' : '초기값'}
+              </p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-lg">
-              <div className="text-xs text-slate-500 uppercase font-semibold">유전적 목표 키 (Mid-P)</div>
-              <div className="text-xl font-bold text-slate-600">{patient.targetHeight} cm</div>
+            <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+              <p className="text-xs text-emerald-600 font-bold mb-1">예측 성인 키 (PAH)</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {aiPredictedHeight || patient.predictedAdultHeight}
+                <span className="text-sm font-normal text-slate-500 ml-1">cm</span>
+              </p>
+              <p className="text-xs text-slate-400 mt-1">AI 예측 모델</p>
+            </div>
+            <div className="p-4 bg-orange-50 rounded-lg border border-orange-100">
+              <p className="text-xs text-orange-600 font-bold mb-1">유전적 목표 키 (Target)</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {patient.targetHeight.toFixed(1)}
+                <span className="text-sm font-normal text-slate-500 ml-1">cm</span>
+              </p>
+              <p className="text-xs text-slate-400 mt-1">Mid-Parental</p>
             </div>
           </div>
         </div>
@@ -143,11 +170,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 <YAxis dataKey="boneAge" domain={['auto', 'auto']} unit="세" stroke="#64748b" />
                 <Tooltip
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: number, name: string) => [
-                    `${value}세`,
-                    name === 'boneAge' ? '골연령' : '실제나이'
-                  ]}
-                  labelFormatter={(label) => `실제나이: ${label}세`}
+                  formatter={(value: number, name: string) => {
+                    if (name === 'boneAge') return [`${value}세`, '골연령 (Bone Age)'];
+                    if (name === 'age') return [`${value}세`, '표준 성장 (Standard)'];
+                    return [`${value}세`, name];
+                  }}
+                  labelFormatter={(label) => `만 나이: ${label}세`}
                 />
                 <Legend />
                 {/* Reference Line y=x */}

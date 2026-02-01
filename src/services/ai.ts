@@ -23,16 +23,29 @@ export const aiService = {
         Please provide:
         1. Growth Pattern Analysis (Height velocity, BMI trend)
         2. Pubertal Status Assessment (based on bone age and lab results if available)
-        3. Predicted Adult Height (if calculable)
+        3. Predicted Adult Height (PAH) in cm. Calculate based on current height, bone age, and mid-parental height if available.
         4. Recommendations for further testing or monitoring
         5. A brief summary for the parent (friendly language)
 
-        Format the output in clear Markdown suitable for a medical report.
+        Format the output as a valid JSON object with this structure:
+        {
+          "analysis": ["point 1 textual analysis...", "point 2...", "summary..."],
+          "predictedHeight": number (e.g. 175.5)
+        }
+        Do not include markdown code blocks. Just the raw JSON.
       `;
 
             const result = await model.generateContent(prompt);
             const response = await result.response;
-            return response.text();
+            const text = response.text();
+            // Clean up code blocks if present just in case
+            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const data = JSON.parse(jsonStr);
+
+            return {
+                analysis: data.analysis as string[],
+                predictedHeight: data.predictedHeight as number | undefined
+            };
         } catch (error) {
             console.error("Error generating AI analysis:", error);
             throw error;

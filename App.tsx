@@ -26,6 +26,7 @@ function App() {
 
   // AI State
   const [aiAnalysis, setAiAnalysis] = useState<string[] | null>(null);
+  const [aiPredictedHeight, setAiPredictedHeight] = useState<number | undefined>(undefined);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const [measurements, setMeasurements] = useState<any[]>([]); // New state for raw measurements
@@ -49,32 +50,51 @@ function App() {
     try {
       const labs = await api.getLabResults(patientId);
       const meas = await api.getMeasurements(patientId);
+      const patient = patients.find(p => p.id === patientId);
 
       setLabResults(labs);
       setMeasurements(meas);
 
-      // 2. Add patient measurements
-      // Real implementation would calculate exact age for each measurement
-      const patientData = meas.map(m => {
-        const patient = patients.find(p => p.id === patientId);
-        if (!patient) return null;
+      if (!patient) return;
 
+      // 1. Process Patient Measurements
+      const patientPoints = meas.map(m => {
         const measureDate = new Date(m.date);
         const birthDate = new Date(patient.dob);
-        const ageInYears = (measureDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        const ageInMonths = (measureDate.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44); // Approx month
+        const ageInYears = ageInMonths / 12;
 
         return {
-          age: Number(ageInYears.toFixed(1)),
-          height: m.height === 0 ? undefined : m.height, // Avoid plotting 0 height
+          age: Number(ageInYears.toFixed(2)),
+          ageInMonths: Number(ageInMonths.toFixed(1)),
+          height: m.height === 0 ? undefined : m.height,
           weight: m.weight === 0 ? undefined : m.weight,
           boneAge: m.boneAge,
-          // Keep standard curves empty for these custom points so lines don't get messy
-          // or rely on the Chart to interpolate/ignore missing keys
+          isPatient: true, // Flag to identify patient data
+          date: m.date
         };
       }).filter(Boolean);
 
-      // Sort by age
-      const combinedData = [...patientData!].sort((a: any, b: any) => a.age - b.age);
+      // 2. Load Standard Data
+      const standardPoints = await loadStandardGrowthData(patient.gender);
+
+      // 3. Merge Data
+      // We want a combined array sorted by age. 
+      // For chart smoothness, we use standard points as the base and insert patient points.
+      // Recharts connects nulls, so we don't necessarily need to interpolate P-values for patient points if we use connectNulls.
+      // However, to make the tooltip nice (showing P-values at patient age), interpolation is better.
+      // For now, let's just combine and sort; Recharts `connectNulls` is already on.
+
+      const combinedData = [
+        ...standardPoints.map(sp => ({
+          age: sp.ageInYears,
+          percentile3: sp.percentile3,
+          percentile50: sp.percentile50,
+          percentile97: sp.percentile97,
+        })),
+        ...patientPoints
+      ].sort((a: any, b: any) => a.age - b.age);
+
       setGrowthData(combinedData);
 
     } catch (e) {
@@ -93,11 +113,8 @@ function App() {
     setIsAnalyzing(true);
     try {
       const result = await aiService.analyzeGrowth(currentPatient, growthData, labResults);
-      // Clean up markdown code blocks if present
-      const cleanResult = result.replace(/```markdown/g, '').replace(/```/g, '');
-      // Split into list items if it's a list, otherwise just array of one
-      const lines = cleanResult.split('\n').filter(line => line.trim().length > 0);
-      setAiAnalysis(lines);
+      setAiAnalysis(result.analysis);
+      if (result.predictedHeight) setAiPredictedHeight(result.predictedHeight);
     } catch (error) {
       console.error("AI Analysis failed", error);
       alert("AI Analysis failed. Check console and API Key.");
@@ -329,6 +346,7 @@ function App() {
                 measurements={measurements}
                 onGenerateReport={() => setCurrentView('report')}
                 aiAnalysis={aiAnalysis}
+                aiPredictedHeight={aiPredictedHeight}
                 onAnalyzeGrowth={handleAIAnalysis}
                 isAnalyzing={isAnalyzing}
               />
