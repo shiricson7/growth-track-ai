@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, FileText, ScanLine, Settings, Menu, Bell, UserPlus, Search, User, ChevronLeft, Ruler, Activity } from 'lucide-react';
+import { LayoutDashboard, FileText, ScanLine, Settings as SettingsIcon, Menu, Bell, UserPlus, Search, User, ChevronLeft, Ruler, Activity } from 'lucide-react';
 import PatientDetail from './components/PatientDetail';
 import PatientList from './components/PatientList';
 import LabOCR from './components/LabOCR';
@@ -8,6 +8,7 @@ import ParentReport from './components/ParentReport';
 import PatientForm from './components/PatientForm';
 import BoneAgeReading from './components/BoneAgeReading';
 import MeasurementInput from './components/MeasurementInput';
+import Settings, { ClinicSettings } from './components/Settings'; // Added
 import { PATIENT } from './mockData'; // Removed LAB_RESULTS, GROWTH_DATA
 import { LabResult, Patient } from './types';
 import { api } from './src/services/api';
@@ -27,6 +28,23 @@ function App() {
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
   const [growthData, setGrowthData] = useState<any[]>([]); // Initialize empty
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Settings State
+  const [clinicSettings, setClinicSettings] = useState<ClinicSettings>(() => {
+    const saved = localStorage.getItem('clinic_settings');
+    return saved ? JSON.parse(saved) : {
+      hospitalName: 'GrowthTrack Clinic',
+      doctorName: 'Dr. Johnson',
+      address: '서울특별시 강남구 테헤란로 123',
+      phone: '(02) 555-1234'
+    };
+  });
+
+  const updateSettings = (newSettings: ClinicSettings) => {
+    setClinicSettings(newSettings);
+    localStorage.setItem('clinic_settings', JSON.stringify(newSettings));
+  };
+
 
   // AI State
   const [aiAnalysis, setAiAnalysis] = useState<string[] | null>(null);
@@ -245,7 +263,7 @@ function App() {
             <div className="bg-blue-600 text-white p-1.5 rounded-lg">
               <LayoutDashboard size={20} />
             </div>
-            <span className="text-xl font-bold tracking-tight">GrowthTrack</span>
+            <span className="text-xl font-bold tracking-tight">{clinicSettings.hospitalName}</span>
           </div>
         </div>
 
@@ -267,13 +285,13 @@ function App() {
         </nav>
 
         <div className="p-4 border-t border-slate-100">
-          <SidebarItem view="settings" icon={Settings} label="설정" />
+          <SidebarItem view="settings" icon={SettingsIcon} label="설정" />
           <div className="mt-4 flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-lg border border-slate-100">
             <div className="h-8 w-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs">
               DR
             </div>
             <div className="text-sm">
-              <p className="font-bold text-slate-900">Dr. Johnson</p>
+              <p className="font-bold text-slate-900">{clinicSettings.doctorName}</p>
               <p className="text-slate-400 text-xs">소아내분비내과</p>
             </div>
           </div>

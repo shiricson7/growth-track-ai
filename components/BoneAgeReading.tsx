@@ -76,6 +76,8 @@ const BoneAgeReading: React.FC<BoneAgeReadingProps> = ({ patient, onSave, onCanc
                     </p>
                 </div>
 
+                <MonthReferenceTable />
+
                 <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
                     <button
                         type="button"
@@ -98,3 +100,44 @@ const BoneAgeReading: React.FC<BoneAgeReadingProps> = ({ patient, onSave, onCanc
 };
 
 export default BoneAgeReading;
+
+const MonthReferenceTable = () => (
+    <div className="mt-8 border-t border-slate-100 pt-6">
+        <h3 className="text-sm font-bold text-slate-700 mb-3">개월 수 → 연령 환산표 (Months to Decimals)</h3>
+        <div className="overflow-hidden rounded-lg border border-slate-200">
+            <table className="w-full text-xs text-center">
+                <thead className="bg-slate-50 text-slate-500 font-medium">
+                    <tr>
+                        <th className="py-2 px-2 border-r border-slate-100">개월 (Mon)</th>
+                        <th className="py-2 px-2 border-r border-slate-100">계산식</th>
+                        <th className="py-2 px-2 border-r border-slate-100">소수점 (2자리)</th>
+                        <th className="py-2 px-2">소수점 (1자리)</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-600">
+                    {[
+                        { m: 1, c: '1÷12', d2: '.08세', d1: '.1세' },
+                        { m: 2, c: '2÷12', d2: '.17세', d1: '.2세' },
+                        { m: 3, c: '3÷12', d2: '.25세', d1: '.3세' },
+                        { m: 4, c: '4÷12', d2: '.33세', d1: '.3세' },
+                        { m: 5, c: '5÷12', d2: '.42세', d1: '.4세' },
+                        { m: 6, c: '6÷12', d2: '.50세', d1: '.5세' },
+                        { m: 7, c: '7÷12', d2: '.58세', d1: '.6세' },
+                        { m: 8, c: '8÷12', d2: '.67세', d1: '.7세' },
+                        { m: 9, c: '9÷12', d2: '.75세', d1: '.8세' },
+                        { m: 10, c: '10÷12', d2: '.83세', d1: '.8세' },
+                        { m: 11, c: '11÷12', d2: '.92세', d1: '.9세' },
+                    ].map((row) => (
+                        <tr key={row.m} className="hover:bg-slate-50">
+                            <td className="py-1.5 px-2 border-r border-slate-100 font-medium">{row.m}개월</td>
+                            <td className="py-1.5 px-2 border-r border-slate-100 text-slate-400">{row.c}</td>
+                            <td className="py-1.5 px-2 border-r border-slate-100">{row.d2}</td>
+                            <td className="py-1.5 px-2 font-bold text-slate-800">{row.d1}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+);
+

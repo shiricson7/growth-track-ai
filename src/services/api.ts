@@ -149,6 +149,32 @@ export const api = {
         } as Measurement;
     },
 
+    async updateMeasurement(id: string, updates: Partial<Measurement>) {
+        const dbUpdates: any = {};
+        if (updates.date) dbUpdates.date = updates.date;
+        if (updates.height !== undefined) dbUpdates.height = updates.height;
+        if (updates.weight !== undefined) dbUpdates.weight = updates.weight;
+        if (updates.boneAge !== undefined) dbUpdates.bone_age = updates.boneAge;
+
+        const { data, error } = await supabase
+            .from('measurements')
+            .update(dbUpdates)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        const m = data as any;
+        return {
+            id: m.id,
+            patient_id: m.patient_id,
+            date: m.date,
+            height: m.height,
+            weight: m.weight,
+            boneAge: m.bone_age
+        } as Measurement;
+    },
+
     // --- Lab Results ---
     async getLabResults(patientId: string) {
         const { data, error } = await supabase

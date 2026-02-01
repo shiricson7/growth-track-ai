@@ -3,16 +3,19 @@ import { Patient, GrowthPoint } from '../types';
 import { Printer, Download, Star } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
+import { ClinicSettings } from './Settings';
+
 interface ParentReportProps {
   patient: Patient;
   growthData: GrowthPoint[];
   onBack: () => void;
+  settings: ClinicSettings;
 }
 
-const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, onBack }) => {
+const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, onBack, settings }) => {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
-      
+
       {/* Toolbar */}
       <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 print:hidden">
         <button onClick={onBack} className="text-slate-600 hover:text-slate-900 font-medium">← 대시보드로 돌아가기</button>
@@ -52,7 +55,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, onBack
               지난 6개월간 키 성장 속도(Height Velocity)가 증가하여, 이전보다 빠르게 성장하고 있음을 확인하였습니다.
             </p>
             <p>
-              <strong>골연령(Bone Age)</strong> 평가는 실제 나이(12.5세)보다 약간 앞선 13.8세로 측정되었습니다. 
+              <strong>골연령(Bone Age)</strong> 평가는 실제 나이(12.5세)보다 약간 앞선 13.8세로 측정되었습니다.
               이는 성조숙증 치료 과정에서 흔히 관찰되는 현상이며, 성장판이 너무 일찍 닫히지 않도록 GnRH 작용제 약물로 적절히 조절되고 있습니다.
             </p>
             <p className="font-medium text-blue-800">
@@ -65,7 +68,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, onBack
         <div className="mb-10">
           <h2 className="text-xl font-bold text-slate-800 mb-4">성장 추이 (Growth Trajectory)</h2>
           <div className="h-[300px] w-full bg-white border border-slate-100 rounded-xl p-4">
-             <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart data={growthData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="age" unit="세" stroke="#94a3b8" />
@@ -92,18 +95,18 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, onBack
             </ul>
           </div>
           <div>
-             <h3 className="font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2">다음 단계 (Next Steps)</h3>
-             <ul className="space-y-2 text-sm text-slate-700">
-               <li className="flex gap-2">
-                 <span className="text-blue-500 font-bold">1.</span> 매일 성장호르몬(GH) 주사 투여 지속.
-               </li>
-               <li className="flex gap-2">
-                 <span className="text-blue-500 font-bold">2.</span> 다음 GnRH 주사 예정일은 6월 12일입니다.
-               </li>
-               <li className="flex gap-2">
-                 <span className="text-blue-500 font-bold">3.</span> 3개월 후 추적 혈액검사가 필요합니다.
-               </li>
-             </ul>
+            <h3 className="font-bold text-slate-800 mb-3 border-b border-slate-200 pb-2">다음 단계 (Next Steps)</h3>
+            <ul className="space-y-2 text-sm text-slate-700">
+              <li className="flex gap-2">
+                <span className="text-blue-500 font-bold">1.</span> 매일 성장호르몬(GH) 주사 투여 지속.
+              </li>
+              <li className="flex gap-2">
+                <span className="text-blue-500 font-bold">2.</span> 다음 GnRH 주사 예정일은 6월 12일입니다.
+              </li>
+              <li className="flex gap-2">
+                <span className="text-blue-500 font-bold">3.</span> 3개월 후 추적 혈액검사가 필요합니다.
+              </li>
+            </ul>
           </div>
         </div>
 

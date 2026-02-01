@@ -3,6 +3,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText, ClipboardList, Ruler } from 'lucide-react';
 import { Patient, GrowthPoint, LabResult, Measurement } from '../types';
 
+import BoneAgeHistory from './BoneAgeHistory';
+
 interface PatientDetailProps {
   patient: Patient;
   growthData: GrowthPoint[];
@@ -13,6 +15,7 @@ interface PatientDetailProps {
   aiPredictedHeight?: number; // New prop
   onAnalyzeGrowth: () => void;
   isAnalyzing: boolean;
+  onRefresh: () => void; // Added for refreshing data after edits
 }
 
 const PatientDetail: React.FC<PatientDetailProps> = ({
@@ -24,10 +27,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   aiAnalysis,
   aiPredictedHeight,
   onAnalyzeGrowth,
-  isAnalyzing
+  isAnalyzing,
+  onRefresh
 }) => {
   /* Lab History State */
   const [labViewMode, setLabViewMode] = React.useState<'list' | 'trend'>('list');
+  const [showBoneAgeHistory, setShowBoneAgeHistory] = React.useState(false);
   const [selectedParameter, setSelectedParameter] = React.useState<string>('');
 
   // Sorting measurements for history list
@@ -199,13 +204,21 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </div>
             <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
               <p className="text-xs text-purple-600 font-bold mb-1">골연령 (Bone Age)</p>
-              <p className="text-2xl font-bold text-slate-900">
+              <p className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                 {sortedMeasurements.find(m => Number(m.boneAge) > 0)?.boneAge || patient.boneAge || '-'}
-                <span className="text-sm font-normal text-slate-500 ml-1">세</span>
+                <span className="text-sm font-normal text-slate-500">세</span>
               </p>
-              <p className="text-xs text-slate-400 mt-1">
-                {sortedMeasurements.find(m => m.boneAge && m.boneAge > 0)?.date ? '최신 측정' : '초기값'}
-              </p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-slate-400">
+                  {sortedMeasurements.find(m => Number(m.boneAge) > 0)?.date ? '최신 측정' : '초기값'}
+                </p>
+                <button
+                  onClick={() => setShowBoneAgeHistory(true)}
+                  className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded hover:bg-purple-200 transition-colors"
+                >
+                  기록 / 수정
+                </button>
+              </div>
             </div>
             <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100">
               <p className="text-xs text-emerald-600 font-bold mb-1">예측 성인 키 (PAH)</p>
@@ -442,6 +455,15 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           </div>
         )}
       </div>
+      {/* Bone Age History Modal */}
+      {showBoneAgeHistory && (
+        <BoneAgeHistory
+          patient={patient}
+          measurements={measurements}
+          onClose={() => setShowBoneAgeHistory(false)}
+          onUpdate={onRefresh}
+        />
+      )}
     </div>
   );
 };
