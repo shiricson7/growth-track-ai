@@ -127,7 +127,7 @@ const PatientList: React.FC<PatientListProps> = ({ patients, onSelectPatient, on
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-slate-500">
-                                            - {/* TODO: Add last visit date */}
+                                            {patient.lastVisitDate || '-'}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button className="text-slate-400 hover:text-blue-600">

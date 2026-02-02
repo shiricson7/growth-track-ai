@@ -58,6 +58,7 @@ export interface Patient {
   chartNumber?: string; // Hospital Chart Number
   ssn?: string; // Resident Registration Number (RRN)
   visitDate?: string; // Last Visit / Exam Date
+  lastVisitDate?: string; // Latest body measurement date
   clinicId?: string;
   tannerStage?: string;
   boneAge: number; // in years

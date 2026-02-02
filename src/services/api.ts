@@ -48,6 +48,26 @@ export const api = {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
+        const patientIds = (data || []).map((p: any) => p.id).filter(Boolean);
+        const latestVisitByPatient: Record<string, string> = {};
+        if (patientIds.length > 0) {
+            const { data: measurements, error: measurementsError } = await supabase
+                .from('measurements')
+                .select('patient_id, date, height, weight')
+                .in('patient_id', patientIds)
+                .order('date', { ascending: false });
+            if (!measurementsError && measurements) {
+                for (const m of measurements as any[]) {
+                    const hasBodyMeasure = (m.height && m.height > 0) || (m.weight && m.weight > 0);
+                    if (!hasBodyMeasure) continue;
+                    if (!latestVisitByPatient[m.patient_id]) {
+                        latestVisitByPatient[m.patient_id] = m.date;
+                    }
+                }
+            } else if (measurementsError) {
+                console.warn('Failed to load measurements for last visit date', measurementsError);
+            }
+        }
 
         // Map DB snake_case to Frontend camelCase
         return data.map((p: any) => {
@@ -76,6 +96,7 @@ export const api = {
                 heightMother: p.height_mother,
                 chartNumber: p.chart_number,
                 tannerStage: p.tanner_stage,
+                lastVisitDate: latestVisitByPatient[p.id] || null,
 
                 // Calculated values
                 boneAge: p.bone_age || 0,

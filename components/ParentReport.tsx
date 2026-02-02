@@ -5,6 +5,88 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import { aiService } from '../src/services/ai';
 import { ClinicSettings } from './Settings';
 
+const splitReportContent = (content: string) => {
+  if (!content) return { summaryContent: '', restContent: '' };
+  const summaryIndex = content.indexOf('# 종합 요약');
+  if (summaryIndex === -1) {
+    return { summaryContent: content, restContent: '' };
+  }
+  const nextHeaderIndex = content.indexOf('\n## ', summaryIndex + 1);
+  if (nextHeaderIndex === -1) {
+    return { summaryContent: content, restContent: '' };
+  }
+  return {
+    summaryContent: content.slice(0, nextHeaderIndex).trim(),
+    restContent: content.slice(nextHeaderIndex).trimStart()
+  };
+};
+
+const buildGrowthPolyline = (points: GrowthPoint[]) => {
+  const width = 320;
+  const height = 120;
+  const padding = 16;
+  if (points.length < 2) return { width, height, polyline: '', dots: [] as { cx: number; cy: number }[] };
+
+  const ages = points.map((p) => p.age);
+  const heights = points.map((p) => p.height);
+  const minAge = Math.min(...ages);
+  const maxAge = Math.max(...ages);
+  const minHeight = Math.min(...heights);
+  const maxHeight = Math.max(...heights);
+
+  const ageSpan = maxAge - minAge || 1;
+  const heightSpan = maxHeight - minHeight || 1;
+
+  const dots = points.map((p) => {
+    const cx = padding + ((p.age - minAge) / ageSpan) * (width - padding * 2);
+    const cy = height - padding - ((p.height - minHeight) / heightSpan) * (height - padding * 2);
+    return { cx, cy };
+  });
+
+  const polyline = dots.map((d) => `${d.cx},${d.cy}`).join(' ');
+  return { width, height, polyline, dots };
+};
+
+const RecentGrowthSummary: React.FC<{ points: GrowthPoint[]; velocity: number | null }> = ({ points, velocity }) => {
+  const recentPoints = points.length > 5 ? points.slice(-5) : points;
+  const chart = buildGrowthPolyline(recentPoints);
+  const velocityText = Number.isFinite(velocity)
+    ? `최근 성장속도는 ${velocity?.toFixed(1)} cm/년 입니다.`
+    : '최근 성장속도는 데이터가 부족해 계산할 수 없습니다.';
+
+  return (
+    <div className="mt-6 border border-slate-200 rounded-lg bg-white p-4">
+      <div className="text-sm font-semibold text-slate-800 mb-2">최근 성장 추이</div>
+      {recentPoints.length < 2 ? (
+        <p className="text-sm text-slate-500">최근 성장 데이터가 충분하지 않습니다.</p>
+      ) : (
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <div className="flex-1">
+            <svg
+              width="100%"
+              viewBox={`0 0 ${chart.width} ${chart.height}`}
+              preserveAspectRatio="none"
+              className="h-24 w-full"
+            >
+              <rect x="0" y="0" width={chart.width} height={chart.height} fill="#f8fafc" rx="8" />
+              <polyline
+                fill="none"
+                stroke="#2563eb"
+                strokeWidth="2.5"
+                points={chart.polyline}
+              />
+              {chart.dots.map((dot, idx) => (
+                <circle key={idx} cx={dot.cx} cy={dot.cy} r="3" fill="#1d4ed8" />
+              ))}
+            </svg>
+          </div>
+          <div className="text-sm text-slate-700 whitespace-nowrap">{velocityText}</div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Simple Markdown Renderer
 const MarkdownRenderer = ({ content }: { content: string }) => {
   if (!content) return null;
@@ -83,6 +165,26 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   const [loading, setLoading] = React.useState(true);
   const [isPrinting, setIsPrinting] = React.useState(false);
   const [reportPredictedHeight, setReportPredictedHeight] = React.useState<number | undefined>(aiPredictedHeight);
+  const { summaryContent, restContent } = React.useMemo(() => splitReportContent(reportContent), [reportContent]);
+  const growthSeries = React.useMemo(() => {
+    return (growthData || [])
+      .filter((p) => Number.isFinite(p.age) && Number.isFinite(p.height))
+      .sort((a, b) => a.age - b.age);
+  }, [growthData]);
+  const recentGrowthVelocity = React.useMemo(() => {
+    if (growthSeries.length < 2) return null;
+    for (let i = growthSeries.length - 1; i > 0; i--) {
+      const latest = growthSeries[i];
+      for (let j = i - 1; j >= 0; j--) {
+        const prev = growthSeries[j];
+        const ageDiff = latest.age - prev.age;
+        if (ageDiff > 0) {
+          return (latest.height - prev.height) / ageDiff;
+        }
+      }
+    }
+    return null;
+  }, [growthSeries]);
 
   React.useEffect(() => {
     const handleAfterPrint = () => setIsPrinting(false);
@@ -179,7 +281,18 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
               </div>
             ) : (
               <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 print-allow-break">
-                <MarkdownRenderer content={reportContent} />
+                {summaryContent && restContent ? (
+                  <>
+                    <MarkdownRenderer content={summaryContent} />
+                    <RecentGrowthSummary points={growthSeries} velocity={recentGrowthVelocity} />
+                    <MarkdownRenderer content={restContent} />
+                  </>
+                ) : (
+                  <>
+                    <MarkdownRenderer content={reportContent} />
+                    <RecentGrowthSummary points={growthSeries} velocity={recentGrowthVelocity} />
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -242,7 +355,20 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
           {loading ? (
             <p className="text-sm text-slate-500">리포트 생성 중입니다. 생성 완료 후 다시 인쇄해주세요.</p>
           ) : (
-            <MarkdownRenderer content={reportContent} />
+            <>
+              {summaryContent && restContent ? (
+                <>
+                  <MarkdownRenderer content={summaryContent} />
+                  <RecentGrowthSummary points={growthSeries} velocity={recentGrowthVelocity} />
+                  <MarkdownRenderer content={restContent} />
+                </>
+              ) : (
+                <>
+                  <MarkdownRenderer content={reportContent} />
+                  <RecentGrowthSummary points={growthSeries} velocity={recentGrowthVelocity} />
+                </>
+              )}
+            </>
           )}
         </div>
 
