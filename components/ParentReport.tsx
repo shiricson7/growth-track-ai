@@ -211,7 +211,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
             <div><span className="font-semibold text-slate-900">골연령:</span> {patient.boneAge || '-'}세</div>
             <div><span className="font-semibold text-slate-900">Tanner stage:</span> {patient.tannerStage || '-'}</div>
             <div><span className="font-semibold text-slate-900">목표키(MPH):</span> {patient.targetHeight?.toFixed(1)} cm</div>
-            <div><span className="font-semibold text-slate-900">예측 성인키(PAH):</span> {(aiPredictedHeight || patient.predictedAdultHeight || 0).toFixed(1)} cm</div>
+            <div><span className="font-semibold text-slate-900">예측 성인키(PAH):</span> {(patient.predictedAdultHeight || 0).toFixed(1)} cm</div>
           </div>
         </div>
 
