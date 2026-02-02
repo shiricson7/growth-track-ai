@@ -1,6 +1,6 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText, ClipboardList, Ruler } from 'lucide-react';
+import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, ClipboardList, Ruler, Settings } from 'lucide-react';
 import { Patient, GrowthPoint, LabResult, Measurement } from '../types';
 
 import { growthStandards } from '../src/utils/growthStandards';
@@ -12,13 +12,13 @@ interface PatientDetailProps {
   growthData: GrowthPoint[];
   labResults: LabResult[];
   measurements: Measurement[]; // New prop
-  onGenerateReport: () => void;
   aiAnalysis: string[] | null;
   aiPredictedHeight?: number; // New prop
   onAnalyzeGrowth: () => void;
   isAnalyzing: boolean;
   onRefresh: () => void; // Added for refreshing data after edits
   onManageMedication?: () => void; // Added
+  onEditPatient?: () => void;
 }
 
 const PatientDetail: React.FC<PatientDetailProps> = ({
@@ -26,13 +26,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   growthData,
   labResults,
   measurements,
-  onGenerateReport,
   aiAnalysis,
   aiPredictedHeight,
   onAnalyzeGrowth,
   isAnalyzing,
   onRefresh,
-  onManageMedication
+  onManageMedication,
+  onEditPatient
 }) => {
   /* Lab History State */
   const [labViewMode, setLabViewMode] = React.useState<'list' | 'trend'>('list');
@@ -110,9 +110,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={onGenerateReport} className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-              <FileText size={18} />
-              보호자용 리포트 생성
+            <button
+              onClick={onEditPatient}
+              disabled={!onEditPatient}
+              className="flex items-center gap-2 border border-slate-300 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+            >
+              <Settings size={18} />
+              환자 정보 수정
             </button>
           </div>
         </div>

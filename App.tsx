@@ -479,7 +479,6 @@ function App() {
                 growthData={growthData}
                 labResults={labResults}
                 measurements={measurements}
-                onGenerateReport={() => setCurrentView('report')}
                 aiAnalysis={aiAnalysis}
                 aiPredictedHeight={aiPredictedHeight}
                 onAnalyzeGrowth={handleAIAnalysis}
