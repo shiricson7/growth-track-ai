@@ -97,10 +97,10 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   }, [patient.id]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 print-report-container">
 
       {/* Toolbar */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 print:hidden">
+      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 print-hidden">
         <button onClick={onBack} className="text-slate-600 hover:text-slate-900 font-medium">← 대시보드로 돌아가기</button>
         <div className="flex gap-3">
           <button onClick={() => window.print()} className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 font-medium">
@@ -113,9 +113,9 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
       </div>
 
       {/* Report Content */}
-      <div className="bg-white p-12 rounded-none shadow-lg print:shadow-none min-h-[1000px]">
+      <div className="bg-white p-12 rounded-none shadow-lg min-h-[1000px] print-report">
         {/* Header */}
-        <div className="border-b-4 border-blue-600 pb-8 mb-8 flex justify-between items-start">
+        <div className="border-b-4 border-blue-600 pb-8 mb-8 flex justify-between items-start print-section">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">성장 발달 리포트</h1>
             <p className="text-slate-500 mt-2 text-lg"><span className="text-slate-900 font-semibold">{patient.name}</span> 어린이의 부모님께 드리는 보고서</p>
@@ -128,7 +128,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         </div>
 
         {/* AI Generated Content */}
-        <div className="mb-10 min-h-[300px]">
+        <div className="mb-10 min-h-[300px] print-section">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-48 space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -143,7 +143,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         </div>
 
         {/* Simplified Chart */}
-        <div className="mb-10 page-break-inside-avoid">
+        <div className="mb-10 print-section">
           <h2 className="text-xl font-bold text-slate-800 mb-4">성장 추이 (Growth Trajectory)</h2>
           <div className="h-[300px] w-full bg-white border border-slate-100 rounded-xl p-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -163,7 +163,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         </div>
 
         {/* Footer */}
-        <div className="mt-20 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm">
+        <div className="mt-20 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm print-section">
           <p>{settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}</p>
         </div>
       </div>

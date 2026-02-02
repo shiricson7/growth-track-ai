@@ -89,12 +89,23 @@ function App() {
     setClinicLoading(true);
     try {
       const myClinic = await api.getMyClinic();
+      const prevClinicId = clinic?.id || null;
       setClinic(myClinic);
-      setCurrentPatient(null);
-      setPatients([]);
-      setLabResults([]);
-      setMeasurements([]);
-      setGrowthData([]);
+      if (!myClinic?.id) {
+        setCurrentPatient(null);
+        setPatients([]);
+        setLabResults([]);
+        setMeasurements([]);
+        setGrowthData([]);
+        return;
+      }
+      if (myClinic.id !== prevClinicId) {
+        setCurrentPatient(null);
+        setLabResults([]);
+        setMeasurements([]);
+        setGrowthData([]);
+      }
+      await loadData(myClinic.id);
     } catch (e) {
       console.error("Failed to load clinic", e);
       setClinic(null);
@@ -111,12 +122,6 @@ function App() {
     }
     loadClinic();
   }, [session]);
-
-  // Load Initial Data (after clinic ready)
-  useEffect(() => {
-    if (!clinic?.id) return;
-    loadData(clinic.id);
-  }, [clinic?.id]);
 
   const loadData = async (clinicId: string) => {
     try {
@@ -362,7 +367,7 @@ function App() {
       {!authLoading && session && !clinicLoading && clinic && (
         <div className="flex h-screen bg-slate-50 font-sans">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
+      <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col app-sidebar">
         <div className="p-6 border-b border-slate-100">
           <div className="flex items-center gap-2 text-blue-600">
             <div className="bg-blue-600 text-white p-1.5 rounded-lg">
@@ -406,7 +411,7 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Header with Search */}
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6">
+        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 app-header">
           <button className="md:hidden text-slate-600">
             <Menu />
           </button>

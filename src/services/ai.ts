@@ -1,4 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+    calculateIGF1Percentile,
+    getAgeYearsAtDate,
+    getIGF1RangeForSex,
+    isIGF1Parameter,
+    isLikelyNgMlUnit
+} from "../utils/igf1Roche";
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
@@ -13,12 +20,28 @@ export const aiService = {
         try {
             const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
+            const labsWithIgf1 = labResults.map((lab: any) => {
+                if (!isIGF1Parameter(lab.parameter)) return lab;
+                const ageYears = getAgeYearsAtDate(patientData?.dob, lab.date);
+                const unitOk = isLikelyNgMlUnit(lab.unit);
+                const range = unitOk ? getIGF1RangeForSex(ageYears, patientData?.gender) : null;
+                const percentile = unitOk ? calculateIGF1Percentile(lab.value, ageYears, patientData?.gender) : null;
+                return {
+                    ...lab,
+                    igf1AgeYears: ageYears,
+                    igf1ReferenceLow: range?.low ?? null,
+                    igf1ReferenceHigh: range?.high ?? null,
+                    igf1Percentile: percentile,
+                    igf1UnitMatch: unitOk
+                };
+            });
+
             const prompt = `
         You are an expert pediatric endocrinologist. Analyze the following patient data and provide a clinical assessment.
         
         Patient: ${JSON.stringify(patientData)}
         Measurements (Chronological): ${JSON.stringify(measurements)}
-        Lab Results: ${JSON.stringify(labResults)}
+        Lab Results (IGF-1 enriched): ${JSON.stringify(labsWithIgf1)}
 
         Please provide:
         1. Growth Pattern Analysis (Height velocity, BMI trend)
@@ -26,6 +49,8 @@ export const aiService = {
         3. Predicted Adult Height (PAH) in cm. Calculate based on current height, bone age, and mid-parental height if available.
         4. Recommendations for further testing or monitoring
         5. A brief summary for the parent (friendly language)
+        6. If IGF-1 is present, include its percentile based on Roche Elecsys reference intervals.
+           Use igf1Percentile if provided. If igf1UnitMatch is false or igf1Percentile is null, do not guess.
 
         Format the output as a valid JSON object with this structure:
         {
@@ -57,6 +82,22 @@ export const aiService = {
         try {
             const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
 
+            const labsWithIgf1 = recentLabs.map((lab: any) => {
+                if (!isIGF1Parameter(lab.parameter)) return lab;
+                const ageYears = getAgeYearsAtDate(patient?.dob, lab.date);
+                const unitOk = isLikelyNgMlUnit(lab.unit);
+                const range = unitOk ? getIGF1RangeForSex(ageYears, patient?.gender) : null;
+                const percentile = unitOk ? calculateIGF1Percentile(lab.value, ageYears, patient?.gender) : null;
+                return {
+                    ...lab,
+                    igf1AgeYears: ageYears,
+                    igf1ReferenceLow: range?.low ?? null,
+                    igf1ReferenceHigh: range?.high ?? null,
+                    igf1Percentile: percentile,
+                    igf1UnitMatch: unitOk
+                };
+            });
+
             const prompt = `
                 You are a highly empathetic and professional Growth Specialist (성장 전문의).
                 Your task is to write a "Growth Report for Guardians" (보호자용 리포트) based on the patient's data.
@@ -66,6 +107,7 @@ export const aiService = {
                 - Use polite and gentle Korean (해요체/하십시오체 suitable for parents).
                 - Explain medical terms simply but accurately.
                 - Address the parents' anxiety by highlighting positive aspects first, then gently mentioning areas for care.
+                - Do NOT use emojis or emoticons.
 
                 **Patient Data**:
                 - Name: ${patient.name}
@@ -74,14 +116,14 @@ export const aiService = {
                 - Mid-Parental Target Height: ${patient.targetHeight} cm
                 - Predicted Adult Height (PAH): ${patient.predictedAdultHeight || 'N/A'} cm
                 - Medications: ${JSON.stringify(meds.filter((m: any) => m.status !== 'completed'))} (Hide completed)
-                - Recent Labs: ${JSON.stringify(recentLabs)}
+                - Recent Labs (IGF-1 enriched): ${JSON.stringify(labsWithIgf1)}
 
                 **Report Structure (JSON Format)**:
                 Return a JSON object with a 'markdownReport' field containing the full report in Markdown format.
 
                 JSON Structure:
                 {
-                    "markdownReport": "# 종합 요약 (Executive Summary)\n(2-3 sentences summarizing the child's current growth status warmly.)\n\n## 상세 평가 (Detailed Assessment)\n\n### 🦴 골연령 및 성장 판독 (Bone Age & Growth)\n(Interpretation of bone age vs chronological age. Is it advanced/delayed? What does it mean for final height?)\n\n### 🩸 주요 검사 결과 (Lab Results)\n(Explain key hormones: GH, IGF-1, Sex hormones. Normal or needs attention?)\n\n### 💊 치료 경과 및 투약 관리 (Medication & Treatment)\n(Review current medications. Encouragement on adherence.)\n\n## 💡 향후 제언 (Recommendations)\n\n### ✅ 긍정적인 부분 (Strengths)\n(What is going well? e.g., Good response to treatment, healthy growth velocity.)\n\n### ⚠️ 유의할 점 (Focus Areas)\n(What to watch out for? e.g., Weight control, missed doses, side effects.)\n\n### 👩‍⚕️ 다음 단계 (Next Steps)\n(Recommended follow-up or adjustments.)"
+                    "markdownReport": "# 종합 요약 (Executive Summary)\n(2-3 sentences summarizing the child's current growth status warmly.)\n\n## 상세 평가 (Detailed Assessment)\n\n### 골연령 및 성장 판독 (Bone Age & Growth)\n(Interpretation of bone age vs chronological age. Is it advanced/delayed? What does it mean for final height?)\n\n### 주요 검사 결과 (Lab Results)\n(Explain key hormones: GH, IGF-1, Sex hormones. Normal or needs attention? If IGF-1 is present, include percentile based on Roche Elecsys reference intervals; use igf1Percentile if provided.)\n\n### 치료 경과 및 투약 관리 (Medication & Treatment)\n(Review current medications. Encouragement on adherence.)\n\n## 향후 제언 (Recommendations)\n\n### 긍정적인 부분 (Strengths)\n(What is going well? e.g., Good response to treatment, healthy growth velocity.)\n\n### 유의할 점 (Focus Areas)\n(What to watch out for? e.g., Weight control, missed doses, side effects.)\n\n### 다음 단계 (Next Steps)\n(Recommended follow-up or adjustments.)"
                 }
 
                 **Rules**:

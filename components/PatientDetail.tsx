@@ -4,6 +4,7 @@ import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, FileText, 
 import { Patient, GrowthPoint, LabResult, Measurement } from '../types';
 
 import { growthStandards } from '../src/utils/growthStandards';
+import { calculateIGF1Percentile, getAgeYearsAtDate, isIGF1Parameter, isLikelyNgMlUnit } from '../src/utils/igf1Roche';
 import BoneAgeHistory from './BoneAgeHistory';
 
 interface PatientDetailProps {
@@ -427,11 +428,25 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 {labResults.length === 0 ? (
                   <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-400">검사 결과가 없습니다.</td></tr>
                 ) : (
-                  labResults.map((lab) => (
+                  labResults.map((lab) => {
+                    const isIgf1 = isIGF1Parameter(lab.parameter);
+                    const ageAtLab = isIgf1 ? getAgeYearsAtDate(patient.dob, lab.date) : null;
+                    const igf1Percentile =
+                      isIgf1 && isLikelyNgMlUnit(lab.unit)
+                        ? calculateIGF1Percentile(lab.value, ageAtLab, patient.gender)
+                        : null;
+                    return (
                     <tr key={lab.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4 text-slate-500 whitespace-nowrap">{lab.date}</td>
                       <td className="px-6 py-4 font-medium text-slate-900">{lab.parameter}</td>
-                      <td className="px-6 py-4">{lab.value} <span className="text-slate-400 text-xs">{lab.unit}</span></td>
+                      <td className="px-6 py-4">
+                        {lab.value} <span className="text-slate-400 text-xs">{lab.unit}</span>
+                        {igf1Percentile !== null && (
+                          <div className="text-xs text-slate-500 mt-1">
+                            IGF-1 퍼센타일: {igf1Percentile.toFixed(1)}%
+                          </div>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-slate-500">{lab.referenceRange}</td>
                       <td className="px-6 py-4">
                         {lab.status === 'normal' ? (
@@ -443,7 +458,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                         )}
                       </td>
                     </tr>
-                  ))
+                  )})
                 )}
               </tbody>
             </table>
