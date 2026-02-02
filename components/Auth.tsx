@@ -24,7 +24,7 @@ const Auth: React.FC = () => {
         });
         if (signUpError) throw signUpError;
         if (!data.session) {
-          setMessage('???? ??? ??? ??? ???.');
+          setMessage('이메일로 인증 링크를 보냈습니다.');
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -34,7 +34,7 @@ const Auth: React.FC = () => {
         if (signInError) throw signInError;
       }
     } catch (err: any) {
-      setError(err.message || '??? ??????.');
+      setError(err.message || '오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -44,11 +44,11 @@ const Auth: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
         <h1 className="text-2xl font-bold text-slate-900">GrowthTrack AI</h1>
-        <p className="text-slate-500 text-sm mt-1">???? ??????.</p>
+        <p className="text-slate-500 text-sm mt-1">계속하려면 로그인하세요.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">???</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">이메일</label>
             <div className="relative">
               <Mail size={16} className="absolute left-3 top-3 text-slate-400" />
               <input
@@ -63,7 +63,7 @@ const Auth: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">????</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">비밀번호</label>
             <div className="relative">
               <Lock size={16} className="absolute left-3 top-3 text-slate-400" />
               <input
@@ -89,17 +89,17 @@ const Auth: React.FC = () => {
             disabled={loading}
             className="w-full bg-blue-600 text-white rounded-lg py-2.5 font-bold hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? '?? ?...' : mode === 'signup' ? '????' : '???'}
+            {loading ? '처리 중...' : mode === 'signup' ? '회원가입' : '로그인'}
           </button>
         </form>
 
         <div className="mt-4 text-sm text-slate-500">
-          {mode === 'signup' ? '?? ??? ????' : '??? ????'}{' '}
+          {mode === 'signup' ? '이미 계정이 있나요?' : '계정이 없나요?'}{' '}
           <button
             className="text-blue-600 hover:text-blue-700 font-semibold"
             onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}
           >
-            {mode === 'signup' ? '???' : '????'}
+            {mode === 'signup' ? '로그인' : '회원가입'}
           </button>
         </div>
       </div>
