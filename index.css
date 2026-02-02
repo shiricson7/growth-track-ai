@@ -1,6 +1,13 @@
 @media print {
   @page {
+    size: A4;
     margin: 12mm;
+  }
+
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
   }
 
   body {
@@ -9,10 +16,27 @@
     print-color-adjust: exact;
   }
 
+  * {
+    box-shadow: none !important;
+  }
+
+  ::-webkit-scrollbar {
+    display: none !important;
+  }
+
   .app-sidebar,
   .app-header,
   .print-hidden {
     display: none !important;
+  }
+
+  .app-shell {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .app-main {
+    overflow: visible !important;
   }
 
   .print-report-container {
@@ -22,8 +46,10 @@
   }
 
   .print-report {
+    width: 100% !important;
     box-shadow: none !important;
     border: none !important;
+    min-height: auto !important;
   }
 
   .print-section {

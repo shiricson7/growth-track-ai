@@ -368,7 +368,7 @@ function App() {
       )}
 
       {!authLoading && session && !clinicLoading && clinic && (
-        <div className="flex h-screen bg-slate-50 font-sans">
+        <div className="flex h-screen bg-slate-50 font-sans app-shell">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col app-sidebar">
         <div className="p-6 border-b border-slate-100">
@@ -412,7 +412,7 @@ function App() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden app-main">
         {/* Header with Search */}
         <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 app-header">
           <button className="md:hidden text-slate-600">
