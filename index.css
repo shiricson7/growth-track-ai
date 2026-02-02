@@ -5,7 +5,8 @@
   }
 
   html,
-  body {
+  body,
+  #root {
     height: auto !important;
     overflow: visible !important;
   }
@@ -18,6 +19,8 @@
 
   * {
     box-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
   }
 
   ::-webkit-scrollbar {
@@ -39,6 +42,14 @@
     overflow: visible !important;
   }
 
+  .screen-only {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
   .print-report-container {
     max-width: none !important;
     margin: 0 !important;
@@ -56,4 +67,13 @@
     break-inside: avoid;
     page-break-inside: avoid;
   }
+
+  .print-allow-break {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+}
+
+.print-only {
+  display: none;
 }
