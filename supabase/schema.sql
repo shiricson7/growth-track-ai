@@ -322,3 +322,31 @@ end;
 $$;
 
 grant execute on function join_clinic_by_code(text) to authenticated;
+
+-- Create clinic RPC (ensures membership + avoids RLS insert issues)
+create or replace function create_clinic(p_name text)
+returns clinics
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_clinic clinics;
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  insert into clinics (name)
+  values (p_name)
+  returning * into v_clinic;
+
+  insert into clinic_memberships (clinic_id, user_id, role)
+  values (v_clinic.id, auth.uid(), 'owner')
+  on conflict (user_id) do update set clinic_id = excluded.clinic_id, role = 'owner';
+
+  return v_clinic;
+end;
+$$;
+
+grant execute on function create_clinic(text) to authenticated;

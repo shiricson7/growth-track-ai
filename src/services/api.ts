@@ -21,26 +21,10 @@ export const api = {
 
     async createClinic(name: string): Promise<ClinicInfo> {
         const { data: clinic, error } = await supabase
-            .from('clinics')
-            .insert([{ name }])
-            .select()
+            .rpc('create_clinic', { p_name: name })
             .single();
 
         if (error) throw error;
-
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        if (!userData.user) throw new Error('Not authenticated');
-
-        const { error: memberError } = await supabase
-            .from('clinic_memberships')
-            .insert([{
-                clinic_id: clinic.id,
-                user_id: userData.user.id,
-                role: 'owner'
-            }]);
-
-        if (memberError) throw memberError;
 
         return {
             id: clinic.id,
