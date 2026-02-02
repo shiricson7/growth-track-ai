@@ -117,7 +117,7 @@ const PatientList: React.FC<PatientListProps> = ({ patients, onSelectPatient, on
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-1.5">
                                                 <Calendar size={14} className="text-slate-400" />
-                                                {patient.dob} <span className="text-slate-400">({patient.chronologicalAge}세)</span>
+                                                {patient.dob} <span className="text-slate-400">({Number.isFinite(patient.chronologicalAge) ? patient.chronologicalAge.toFixed(1) : '-'}세)</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">

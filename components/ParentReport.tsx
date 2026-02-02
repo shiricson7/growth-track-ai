@@ -75,12 +75,14 @@ interface ParentReportProps {
   labResults: LabResult[];
   onBack: () => void;
   settings: ClinicSettings;
+  aiPredictedHeight?: number;
 }
 
-const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labResults, onBack, settings }) => {
+const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labResults, onBack, settings, aiPredictedHeight }) => {
   const [reportContent, setReportContent] = React.useState<string>('');
   const [loading, setLoading] = React.useState(true);
   const [isPrinting, setIsPrinting] = React.useState(false);
+  const [reportPredictedHeight, setReportPredictedHeight] = React.useState<number | undefined>(aiPredictedHeight);
 
   React.useEffect(() => {
     const handleAfterPrint = () => setIsPrinting(false);
@@ -110,6 +112,27 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
     };
     generate();
   }, [patient.id]);
+
+  React.useEffect(() => {
+    if (Number.isFinite(aiPredictedHeight)) {
+      setReportPredictedHeight(aiPredictedHeight);
+    }
+  }, [aiPredictedHeight]);
+
+  React.useEffect(() => {
+    if (Number.isFinite(reportPredictedHeight)) return;
+    const fetchPredictedHeight = async () => {
+      try {
+        const result = await aiService.analyzeGrowth(patient, growthData, labResults);
+        if (Number.isFinite(result.predictedHeight)) {
+          setReportPredictedHeight(result.predictedHeight);
+        }
+      } catch (e) {
+        // Silent fallback to avoid blocking report generation
+      }
+    };
+    fetchPredictedHeight();
+  }, [reportPredictedHeight, patient.id, growthData, labResults]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 print-report-container">
@@ -207,11 +230,11 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         <div className="print-section mt-4">
           <div className="grid grid-cols-2 gap-3 text-sm text-slate-700">
             <div><span className="font-semibold text-slate-900">생년월일:</span> {patient.dob}</div>
-            <div><span className="font-semibold text-slate-900">만 나이:</span> {patient.chronologicalAge}세</div>
+            <div><span className="font-semibold text-slate-900">만 나이:</span> {Number.isFinite(patient.chronologicalAge) ? patient.chronologicalAge.toFixed(1) : '-'}세</div>
             <div><span className="font-semibold text-slate-900">골연령:</span> {patient.boneAge || '-'}세</div>
             <div><span className="font-semibold text-slate-900">Tanner stage:</span> {patient.tannerStage || '-'}</div>
             <div><span className="font-semibold text-slate-900">목표키(MPH):</span> {patient.targetHeight?.toFixed(1)} cm</div>
-            <div><span className="font-semibold text-slate-900">예측 성인키(PAH):</span> {(patient.predictedAdultHeight || 0).toFixed(1)} cm</div>
+            <div><span className="font-semibold text-slate-900">예측 성인키(PAH):</span> {((reportPredictedHeight ?? patient.predictedAdultHeight ?? 0) as number).toFixed(1)} cm</div>
           </div>
         </div>
 

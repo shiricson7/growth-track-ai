@@ -76,7 +76,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             <div>
               <h1 className="text-2xl font-bold text-slate-900">{patient.name}</h1>
               <div className="flex gap-4 text-sm text-slate-500 mt-1">
-                <span className="flex items-center gap-1"><Calendar size={14} /> 생년월일: {patient.dob} (만 {patient.chronologicalAge}세)</span>
+                <span className="flex items-center gap-1"><Calendar size={14} /> 생년월일: {patient.dob} (만 {Number.isFinite(patient.chronologicalAge) ? patient.chronologicalAge.toFixed(1) : '-'}세)</span>
                 {/* Find latest bone age from sorted measurements or fallback to patient record */}
                 <span className="flex items-center gap-1">
                   <Activity size={14} /> 골연령:

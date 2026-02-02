@@ -51,14 +51,10 @@ export const api = {
 
         // Map DB snake_case to Frontend camelCase
         return data.map((p: any) => {
-            // Calculate Age
+            // Calculate Age (1 decimal)
             const birthDate = new Date(p.birth_date);
             const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
-            }
+            const age = Number(((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1));
 
             // Calculate MPH
             let mph = 0;
@@ -102,14 +98,10 @@ export const api = {
 
         const p = data as any;
 
-        // Calculate Age
+        // Calculate Age (1 decimal)
         const birthDate = new Date(p.birth_date);
         const today = new Date();
-        let age = today.getFullYear() - birthDate.getFullYear();
-        const m = today.getMonth() - birthDate.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-            age--;
-        }
+        const age = Number(((today.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1));
 
         // Calculate MPH
         let mph = 0;

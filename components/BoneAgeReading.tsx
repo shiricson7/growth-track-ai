@@ -23,7 +23,7 @@ const BoneAgeReading: React.FC<BoneAgeReadingProps> = ({ patient, onSave, onCanc
             <div className="bg-slate-900 px-6 py-4 text-white flex justify-between items-center">
                 <div>
                     <h2 className="text-lg font-bold">골연령 판독 (Bone Age Reading)</h2>
-                    <p className="text-slate-400 text-sm">환자: {patient.name} ({patient.gender === 'Male' ? '남' : '여'}, {patient.chronologicalAge}세)</p>
+                    <p className="text-slate-400 text-sm">환자: {patient.name} ({patient.gender === 'Male' ? '남' : '여'}, {Number.isFinite(patient.chronologicalAge) ? patient.chronologicalAge.toFixed(1) : '-'}세)</p>
                 </div>
                 <button onClick={onCancel} className="text-slate-400 hover:text-white transition-colors">
                     <X size={24} />
@@ -140,4 +140,3 @@ const MonthReferenceTable = () => (
         </div>
     </div>
 );
-

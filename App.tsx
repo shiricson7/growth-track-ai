@@ -517,6 +517,7 @@ function App() {
               labResults={labResults}
               onBack={() => setCurrentView('patient-detail')}
               settings={clinicSettings}
+              aiPredictedHeight={aiPredictedHeight}
             />
           )}
 

@@ -45,7 +45,7 @@ const MeasurementInput: React.FC<MeasurementInputProps> = ({ patient, onSave, on
                     </div>
                     <div>
                         <h1 className="text-xl font-bold text-slate-900">신체 계측 입력 (Physical Measurement)</h1>
-                        <p className="text-sm text-slate-500">환자: {patient.name} ({patient.gender === 'Male' ? '남' : '여'}, 만 {patient.chronologicalAge}세)</p>
+                        <p className="text-sm text-slate-500">환자: {patient.name} ({patient.gender === 'Male' ? '남' : '여'}, 만 {Number.isFinite(patient.chronologicalAge) ? patient.chronologicalAge.toFixed(1) : '-'}세)</p>
                     </div>
                 </div>
 
