@@ -107,7 +107,7 @@ export const aiService = {
         }
     },
 
-    async extractLabResults(file: File): Promise<any[]> {
+    async extractLabResults(file: File): Promise<{ results: any[]; collectionDate?: string | null }> {
         try {
             const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" }); // Using 1.5 Flash for OCR as requested (user said 3-flash, assuming 1.5-flash)
 
@@ -125,26 +125,37 @@ export const aiService = {
             });
 
             const prompt = `
-                Analyze this medical lab report image and extract the following specific values if they exist:
-                1. IGFBP-3
-                2. Free T4
-                3. TSH
-                4. LH
-                5. FSH
-                6. Estradiol (E2)
-                7. Somatomedin-C (IGF-1)
-                8. Testosterone
+                Analyze this medical lab report image and extract the following:
+                1) Sample collection date (검체 채취일 / 검채채취일 / 채취일 / 채혈일 / Sample Collection Date).
+                   - It is located immediately next to the label text.
+                   - If multiple dates exist, prefer the one next to those labels (not the report/print date).
+                   - Return in ISO format YYYY-MM-DD if possible; otherwise null.
 
-                Return the data as a JSON array with the following structure for each item found:
+                2) The following lab values if they exist:
+                   - IGFBP-3
+                   - Free T4
+                   - TSH
+                   - LH
+                   - FSH
+                   - Estradiol (E2)
+                   - Somatomedin-C (IGF-1)
+                   - Testosterone
+
+                Return ONLY valid JSON with this structure:
                 {
-                    "parameter": "Name of the test (e.g., TSH)",
-                    "value": number (numeric value only),
-                    "unit": "unit string (e.g., uIU/mL)",
-                    "referenceRange": "reference range string",
-                    "status": "normal" | "high" | "low" (infer based on reference range)
+                  "collectionDate": "YYYY-MM-DD" | null,
+                  "results": [
+                    {
+                      "parameter": "Name of the test (e.g., TSH)",
+                      "value": number (numeric value only),
+                      "unit": "unit string (e.g., uIU/mL)",
+                      "referenceRange": "reference range string",
+                      "status": "normal" | "high" | "low" (infer based on reference range)
+                    }
+                  ]
                 }
 
-                Return ONLY the valid JSON array. Do not include markdown formatting or other text.
+                Do not include markdown formatting or extra text.
             `;
 
             const imagePart = {

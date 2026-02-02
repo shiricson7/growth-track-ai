@@ -14,16 +14,45 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
 
   const [collectionDate, setCollectionDate] = useState(new Date().toISOString().split('T')[0]);
 
+  const normalizeDate = (value?: string | null) => {
+    if (!value) return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+    if (/^\d{8}$/.test(trimmed)) {
+      return `${trimmed.slice(0, 4)}-${trimmed.slice(4, 6)}-${trimmed.slice(6, 8)}`;
+    }
+    const cleaned = trimmed.replace(/[./]/g, '-');
+    const parts = cleaned.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (parts) {
+      const [, y, m, d] = parts;
+      return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+    }
+    const parsed = new Date(cleaned);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+    return null;
+  };
+
   // Actual OCR processing using Gemini
   const handleFiles = async (files: FileList | null) => {
     if (files && files[0]) {
       setStatus('scanning');
       try {
         const extractedData = await aiService.extractLabResults(files[0]);
+        const results = Array.isArray(extractedData)
+          ? extractedData
+          : extractedData.results || [];
+        const extractedDateRaw = !Array.isArray(extractedData) ? extractedData.collectionDate : null;
+        const extractedDate = normalizeDate(extractedDateRaw);
+        if (extractedDate) {
+          setCollectionDate(extractedDate);
+        }
         // Add IDs and dates to extracted data
-        const processedData: LabResult[] = extractedData.map((item: any, index: number) => ({
+        const processedData: LabResult[] = results.map((item: any, index: number) => ({
           id: `ocr-${Date.now()}-${index}`,
-          date: collectionDate, // Will be updated on save if user changes date
+          date: extractedDate || collectionDate, // Will be updated on save if user changes date
           parameter: item.parameter,
           value: item.value,
           unit: item.unit,
