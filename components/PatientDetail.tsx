@@ -178,7 +178,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </ResponsiveContainer>
           </div>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mt-6">
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
               <p className="text-xs text-blue-600 font-bold mb-1">현재 키 (Current Height)</p>
               <p className="text-2xl font-bold text-slate-900">
@@ -235,6 +235,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 <span className="text-sm font-normal text-slate-500 ml-1">cm</span>
               </p>
               <p className="text-xs text-slate-400 mt-1">AI 예측 모델</p>
+            </div>
+            <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
+              <p className="text-xs text-amber-600 font-bold mb-1">Tanner Stage</p>
+              <p className="text-2xl font-bold text-slate-900">
+                {patient.tannerStage || '-'}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">현재 성성숙도</p>
             </div>
             <div className="p-4 bg-orange-50 rounded-lg border border-orange-100">
               <p className="text-xs text-orange-600 font-bold mb-1">유전적 목표 키 (Target)</p>

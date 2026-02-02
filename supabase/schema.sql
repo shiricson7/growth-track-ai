@@ -32,12 +32,15 @@ create table if not exists patients (
   height_father numeric,
   height_mother numeric,
   chart_number text,
+  tanner_stage text,
   clinic_id uuid references clinics(id)
 );
 
 -- Safely add new columns if they don't exist
 alter table patients add column if not exists bone_age numeric;
 alter table patients add column if not exists clinic_id uuid references clinics(id);
+alter table patients add column if not exists chart_number text;
+alter table patients add column if not exists tanner_stage text;
 
 
 -- 2. Medications Table

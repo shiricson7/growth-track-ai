@@ -79,6 +79,7 @@ export const api = {
                 heightFather: p.height_father,
                 heightMother: p.height_mother,
                 chartNumber: p.chart_number,
+                tannerStage: p.tanner_stage,
 
                 // Calculated values
                 boneAge: p.bone_age || 0,
@@ -128,6 +129,7 @@ export const api = {
             heightFather: p.height_father,
             heightMother: p.height_mother,
             chartNumber: p.chart_number,
+            tannerStage: p.tanner_stage,
             boneAge: p.bone_age || 0,
             chronologicalAge: age,
             predictedAdultHeight: 0,
@@ -146,6 +148,7 @@ export const api = {
             chart_number: patient.chartNumber,
             height_father: patient.heightFather || null,
             height_mother: patient.heightMother || null,
+            tanner_stage: patient.tannerStage || null,
             clinic_id: clinicId
             // contact_number, guardian_name, etc.
         };
@@ -178,7 +181,8 @@ export const api = {
         if (updates.chartNumber) dbUpdates.chart_number = updates.chartNumber;
         if (updates.heightFather) dbUpdates.height_father = updates.heightFather;
         if (updates.heightMother) dbUpdates.height_mother = updates.heightMother;
-        if (updates.boneAge) dbUpdates.bone_age = updates.boneAge; // Added mapping
+        if (updates.boneAge !== undefined) dbUpdates.bone_age = updates.boneAge; // Added mapping
+        if (updates.tannerStage !== undefined) dbUpdates.tanner_stage = updates.tannerStage || null;
 
         const { data, error } = await supabase
             .from('patients')

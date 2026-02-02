@@ -16,6 +16,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
     height: 0,
     weight: 0,
     boneAge: initialData?.boneAge || 0, // Default to 0 as it's removed from registration
+    tannerStage: initialData?.tannerStage || '',
     targetHeight: initialData?.targetHeight || 0,
     medications: initialData?.medications || [],
     chartNumber: initialData?.chartNumber || '',
@@ -92,6 +93,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
       medications: formData.medications || [],
       ssn: ssnInput,
       chartNumber: formData.chartNumber,
+      tannerStage: formData.tannerStage,
       heightFather: parentHeight.father,
       heightMother: parentHeight.mother
     } as Patient;
@@ -251,6 +253,22 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
                 <span className="absolute right-3 top-2 text-slate-400 text-sm">세</span>
               </div>
               <p className="text-xs text-slate-500 mt-1">입력 시 환자 정보의 현재 골연령이 업데이트됩니다.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">현재 Tanner Stage</label>
+              <select
+                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                value={formData.tannerStage || ''}
+                onChange={e => setFormData({ ...formData, tannerStage: e.target.value })}
+              >
+                <option value="">선택 안 함</option>
+                <option value="I">I</option>
+                <option value="II">II</option>
+                <option value="III">III</option>
+                <option value="IV">IV</option>
+                <option value="V">V</option>
+              </select>
+              <p className="text-xs text-slate-500 mt-1">진찰 시점의 현재 Tanner stage를 입력하세요.</p>
             </div>
           </div>
         </section>

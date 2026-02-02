@@ -59,6 +59,7 @@ export interface Patient {
   ssn?: string; // Resident Registration Number (RRN)
   visitDate?: string; // Last Visit / Exam Date
   clinicId?: string;
+  tannerStage?: string;
   boneAge: number; // in years
   chronologicalAge: number; // in years
   predictedAdultHeight: number; // cm

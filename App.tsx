@@ -135,20 +135,23 @@ function App() {
 
   const loadPatientData = async (patientId: string) => {
     try {
-      const labs = await api.getLabResults(patientId);
-      const meas = await api.getMeasurements(patientId);
-      const meds = await api.getMedications(patientId);
-      const patient = patients.find(p => p.id === patientId);
+      const [labs, meas, meds, patientFromDb] = await Promise.all([
+        api.getLabResults(patientId),
+        api.getMeasurements(patientId),
+        api.getMedications(patientId),
+        api.getPatient(patientId)
+      ]);
+      const patientFromList = patients.find(p => p.id === patientId);
+      const patient = {
+        ...(patientFromList || {}),
+        ...(patientFromDb || {}),
+        medications: meds
+      } as Patient;
 
       setLabResults(labs);
       setMeasurements(meas);
-
-      // Update patient with latest meds
-      if (patient) {
-        patient.medications = meds;
-      }
-
-      if (!patient) return;
+      setCurrentPatient(patient);
+      setPatients(prev => prev.map(p => (p.id === patient.id ? { ...p, ...patient } : p)));
 
       // 1. Process Patient Measurements
       const patientPoints = meas.map(m => {

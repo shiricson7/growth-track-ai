@@ -45,12 +45,14 @@ export const aiService = {
 
         Please provide:
         1. Growth Pattern Analysis (Height velocity, BMI trend)
-        2. Pubertal Status Assessment (based on bone age and lab results if available)
+        2. Pubertal Status Assessment (use Tanner stage if provided, bone age, and lab results if available)
         3. Predicted Adult Height (PAH) in cm. Calculate based on current height, bone age, and mid-parental height if available.
         4. Recommendations for further testing or monitoring
         5. A brief summary for the parent (friendly language)
         6. If IGF-1 is present, include its percentile based on Roche Elecsys reference intervals.
            Use igf1Percentile if provided. If igf1UnitMatch is false or igf1Percentile is null, do not guess.
+        7. Do not give a generic "keep injecting diligently" message. If hormone levels and bone age suggest treatment may be nearing completion,
+           explain that and outline criteria to consider a treatment end point (e.g., growth velocity, bone age progression, pubertal stage).
 
         Format the output as a valid JSON object with this structure:
         {
