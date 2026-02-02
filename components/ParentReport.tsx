@@ -173,17 +173,13 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   }, [growthData]);
   const recentGrowthVelocity = React.useMemo(() => {
     if (growthSeries.length < 2) return null;
-    for (let i = growthSeries.length - 1; i > 0; i--) {
-      const latest = growthSeries[i];
-      for (let j = i - 1; j >= 0; j--) {
-        const prev = growthSeries[j];
-        const ageDiff = latest.age - prev.age;
-        if (ageDiff > 0) {
-          return (latest.height - prev.height) / ageDiff;
-        }
-      }
-    }
-    return null;
+    const windowSize = growthSeries.length >= 4 ? 4 : Math.min(3, growthSeries.length);
+    const windowPoints = growthSeries.slice(-windowSize);
+    const first = windowPoints[0];
+    const last = windowPoints[windowPoints.length - 1];
+    const ageDiff = last.age - first.age;
+    if (ageDiff <= 0) return null;
+    return (last.height - first.height) / ageDiff;
   }, [growthSeries]);
 
   React.useEffect(() => {
