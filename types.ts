@@ -43,6 +43,13 @@ export interface Medication {
   status: 'active' | 'completed' | 'paused';
 }
 
+export interface ClinicInfo {
+  id: string;
+  name: string;
+  clinicCode?: string;
+  role?: 'owner' | 'member';
+}
+
 export interface Patient {
   id: string;
   name: string;
@@ -51,6 +58,7 @@ export interface Patient {
   chartNumber?: string; // Hospital Chart Number
   ssn?: string; // Resident Registration Number (RRN)
   visitDate?: string; // Last Visit / Exam Date
+  clinicId?: string;
   boneAge: number; // in years
   chronologicalAge: number; // in years
   predictedAdultHeight: number; // cm

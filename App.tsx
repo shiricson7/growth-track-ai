@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Session } from '@supabase/supabase-js';
 import { LayoutDashboard, FileText, ScanLine, Settings as SettingsIcon, Menu, Bell, UserPlus, Search, User, ChevronLeft, Ruler, Activity } from 'lucide-react';
 import PatientDetail from './components/PatientDetail';
 import PatientList from './components/PatientList';
@@ -10,11 +11,13 @@ import BoneAgeReading from './components/BoneAgeReading';
 import MeasurementInput from './components/MeasurementInput';
 import Settings, { ClinicSettings } from './components/Settings'; // Added
 import MedicationManager from './components/MedicationManager'; // Added
-import { PATIENT } from './mockData'; // Removed LAB_RESULTS, GROWTH_DATA
-import { LabResult, Patient } from './types';
+import Auth from './components/Auth';
+import ClinicOnboarding from './components/ClinicOnboarding';
+import { ClinicInfo, LabResult, Patient } from './types';
 import { api } from './src/services/api';
 import { aiService } from './src/services/ai';
 import { getGrowthStandards } from './src/data/growthStandardsData';
+import { supabase } from './src/lib/supabase';
 
 
 
@@ -23,6 +26,10 @@ type View = 'dashboard' | 'patient-detail' | 'ocr' | 'report' | 'settings' | 'pa
 
 function App() {
   /* Supabase & AI Integration */
+  const [session, setSession] = useState<Session | null>(null);
+  const [clinic, setClinic] = useState<ClinicInfo | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [clinicLoading, setClinicLoading] = useState(false);
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [labResults, setLabResults] = useState<LabResult[]>([]);
@@ -55,14 +62,65 @@ function App() {
 
   const [measurements, setMeasurements] = useState<any[]>([]); // New state for raw measurements
 
-  // Load Initial Data
+  // Auth/session bootstrap
   useEffect(() => {
-    loadData();
+    let mounted = true;
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+      setSession(data.session);
+      setAuthLoading(false);
+    };
+    init();
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+    });
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
-  const loadData = async () => {
+  const loadClinic = async () => {
+    if (!session) {
+      setClinic(null);
+      return;
+    }
+    setClinicLoading(true);
     try {
-      const patientsList = await api.getPatients();
+      const myClinic = await api.getMyClinic();
+      setClinic(myClinic);
+      setCurrentPatient(null);
+      setPatients([]);
+      setLabResults([]);
+      setMeasurements([]);
+      setGrowthData([]);
+    } catch (e) {
+      console.error("Failed to load clinic", e);
+      setClinic(null);
+    } finally {
+      setClinicLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!session) {
+      setClinic(null);
+      setClinicLoading(false);
+      return;
+    }
+    loadClinic();
+  }, [session]);
+
+  // Load Initial Data (after clinic ready)
+  useEffect(() => {
+    if (!clinic?.id) return;
+    loadData(clinic.id);
+  }, [clinic?.id]);
+
+  const loadData = async (clinicId: string) => {
+    try {
+      const patientsList = await api.getPatients(clinicId);
       setPatients(patientsList || []);
     } catch (e) {
       console.error("Failed to load data", e);
@@ -177,11 +235,14 @@ function App() {
     try {
       if (updatedPatient.id.startsWith('PT-')) {
         // It's a mock ID, so create new
-        await api.createPatient(updatedPatient);
+        if (!clinic?.id) throw new Error('Missing clinic context');
+        await api.createPatient(updatedPatient, clinic.id);
       } else {
         await api.updatePatient(updatedPatient.id, updatedPatient);
       }
-      await loadData(); // Reload list
+      if (clinic?.id) {
+        await loadData(clinic.id); // Reload list
+      }
       setCurrentView('dashboard'); // Return to list
     } catch (e) {
       console.error("Save failed", e);
@@ -276,7 +337,30 @@ function App() {
   );
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans">
+    <>
+      {authLoading && (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="text-slate-500">Loading...</div>
+        </div>
+      )}
+
+      {!authLoading && !session && <Auth />}
+
+      {!authLoading && session && clinicLoading && (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50">
+          <div className="text-slate-500">Loading clinic...</div>
+        </div>
+      )}
+
+      {!authLoading && session && !clinicLoading && !clinic && (
+        <ClinicOnboarding
+          initialClinicName={clinicSettings.hospitalName}
+          onComplete={loadClinic}
+        />
+      )}
+
+      {!authLoading && session && !clinicLoading && clinic && (
+        <div className="flex h-screen bg-slate-50 font-sans">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
         <div className="p-6 border-b border-slate-100">
@@ -284,7 +368,7 @@ function App() {
             <div className="bg-blue-600 text-white p-1.5 rounded-lg">
               <LayoutDashboard size={20} />
             </div>
-            <span className="text-xl font-bold tracking-tight">{clinicSettings.hospitalName}</span>
+            <span className="text-xl font-bold tracking-tight">{clinic?.name || clinicSettings.hospitalName}</span>
           </div>
         </div>
 
@@ -345,17 +429,23 @@ function App() {
             )}
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${currentPatient ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
-              <User size={14} />
-              <span>현재 환자: {currentPatient ? currentPatient.name : '선택된 환자 없음'}</span>
-            </div>
-            <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
-              <Bell size={20} />
-              <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
-            </button>
+        <div className="flex items-center gap-4">
+          <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border ${currentPatient ? 'bg-blue-50 text-blue-700 border-blue-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+            <User size={14} />
+            <span>현재 환자: {currentPatient ? currentPatient.name : '선택된 환자 없음'}</span>
           </div>
-        </header>
+          <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
+            <Bell size={20} />
+            <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border border-white"></span>
+          </button>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="text-sm text-slate-500 hover:text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg"
+          >
+            로그아웃
+          </button>
+        </div>
+      </header>
 
         {/* View Content */}
         <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-50">
@@ -448,6 +538,8 @@ function App() {
         </div>
       </main>
     </div>
+      )}
+    </>
   );
 }
 

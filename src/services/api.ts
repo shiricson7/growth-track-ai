@@ -1,12 +1,66 @@
 import { supabase } from '../lib/supabase';
-import { Patient, Measurement, LabResult } from '../../types';
+import { Patient, Measurement, LabResult, ClinicInfo } from '../../types';
 
 export const api = {
+    async getMyClinic(): Promise<ClinicInfo | null> {
+        const { data, error } = await supabase
+            .from('clinic_memberships')
+            .select('clinic_id, role, clinics(id, name, clinic_code)')
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!data || !data.clinics) return null;
+
+        return {
+            id: data.clinic_id,
+            name: data.clinics.name,
+            clinicCode: data.clinics.clinic_code,
+            role: data.role
+        };
+    },
+
+    async createClinic(name: string): Promise<ClinicInfo> {
+        const { data: clinic, error } = await supabase
+            .from('clinics')
+            .insert([{ name }])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        if (!userData.user) throw new Error('Not authenticated');
+
+        const { error: memberError } = await supabase
+            .from('clinic_memberships')
+            .insert([{
+                clinic_id: clinic.id,
+                user_id: userData.user.id,
+                role: 'owner'
+            }]);
+
+        if (memberError) throw memberError;
+
+        return {
+            id: clinic.id,
+            name: clinic.name,
+            clinicCode: clinic.clinic_code,
+            role: 'owner'
+        };
+    },
+
+    async joinClinicByCode(code: string): Promise<void> {
+        const { error } = await supabase.rpc('join_clinic_by_code', { p_code: code });
+        if (error) throw error;
+    },
+
     // --- Patients ---
-    async getPatients() {
+    async getPatients(clinicId: string) {
         const { data, error } = await supabase
             .from('patients')
             .select('*')
+            .eq('clinic_id', clinicId)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -36,6 +90,7 @@ export const api = {
                 ...p,
                 dob: p.birth_date,
                 ssn: p.registration_number,
+                clinicId: p.clinic_id,
                 // heightFather/Mother
                 heightFather: p.height_father,
                 heightMother: p.height_mother,
@@ -85,6 +140,7 @@ export const api = {
             ...p,
             dob: p.birth_date,
             ssn: p.registration_number,
+            clinicId: p.clinic_id,
             heightFather: p.height_father,
             heightMother: p.height_mother,
             chartNumber: p.chart_number,
@@ -96,7 +152,7 @@ export const api = {
         } as Patient;
     },
 
-    async createPatient(patient: Omit<Patient, 'id'>) {
+    async createPatient(patient: Omit<Patient, 'id'>, clinicId: string) {
         // Map Frontend camelCase to DB snake_case
         const dbPatient = {
             name: patient.name,
@@ -105,7 +161,8 @@ export const api = {
             registration_number: patient.ssn,
             chart_number: patient.chartNumber,
             height_father: patient.heightFather || null,
-            height_mother: patient.heightMother || null
+            height_mother: patient.heightMother || null,
+            clinic_id: clinicId
             // contact_number, guardian_name, etc.
         };
 
@@ -122,7 +179,8 @@ export const api = {
         return {
             ...p,
             dob: p.birth_date,
-            ssn: p.registration_number
+            ssn: p.registration_number,
+            clinicId: p.clinic_id
         } as Patient;
     },
 
@@ -151,7 +209,8 @@ export const api = {
             ...p,
             dob: p.birth_date,
             ssn: p.registration_number,
-            boneAge: p.bone_age // return mapped value
+            boneAge: p.bone_age,
+            clinicId: p.clinic_id
         } as Patient;
     },
 
