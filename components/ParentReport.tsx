@@ -332,27 +332,66 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
 
           {/* Simplified Chart */}
           <div className="mb-10 print-section">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">성장 추이 (Growth Trajectory)</h2>
-            <div className="h-[300px] min-h-[300px] w-full min-w-0 bg-white border border-slate-100 rounded-xl p-4">
-              <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={200}>
-                <LineChart data={growthData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="age" unit="세" stroke="#94a3b8" />
-                  <YAxis domain={['auto', 'auto']} unit="cm" stroke="#94a3b8" />
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold text-slate-800">성장 추이 (Growth Trajectory)</h2>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 text-blue-700 px-3 py-1 border border-blue-100">
+                  <span className="h-2 w-2 rounded-full bg-blue-700" />
+                  현재 성장
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-slate-50 text-slate-600 px-3 py-1 border border-slate-200">
+                  <span className="h-2 w-2 rounded-full bg-slate-400" />
+                  또래 평균
+                </span>
+                {patient.predictedAdultHeight > 0 && (
+                  <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 border border-emerald-100">
+                    <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                    AI 예측
+                  </span>
+                )}
+              </div>
+            </div>
+            <div
+              className="h-[320px] min-h-[320px] w-full min-w-0 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 shadow-sm"
+              style={{
+                backgroundImage:
+                  'linear-gradient(to right, rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.12) 1px, transparent 1px)',
+                backgroundSize: '32px 32px',
+              }}
+            >
+              <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={220}>
+                <LineChart data={growthData} margin={{ top: 10, right: 24, left: 10, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />
+                  <XAxis
+                    dataKey="age"
+                    unit="세"
+                    stroke="#94a3b8"
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    domain={['auto', 'auto']}
+                    unit="cm"
+                    stroke="#94a3b8"
+                    tick={{ fontSize: 12 }}
+                    tickLine={false}
+                  />
                   <Line
                     type="monotone"
                     dataKey="height"
                     stroke={REPORT_COLORS.patient}
-                    strokeWidth={4}
-                    dot={{ r: 6 }}
+                    strokeWidth={3.5}
+                    dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }}
+                    activeDot={{ r: 6 }}
                     name="현재 성장"
                   />
                   <Line
                     type="monotone"
                     dataKey="percentile50"
                     stroke={REPORT_COLORS.median}
-                    strokeDasharray="5 5"
+                    strokeDasharray="6 6"
                     strokeWidth={2}
+                    dot={false}
                     name="또래 평균"
                   />
                   {patient.predictedAdultHeight > 0 && (
@@ -360,15 +399,18 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                       type="monotone"
                       dataKey="predicted"
                       stroke={REPORT_COLORS.predicted}
-                      strokeDasharray="3 3"
-                      strokeWidth={2}
+                      strokeDasharray="4 4"
+                      strokeWidth={2.5}
+                      dot={false}
                       name="AI 예측"
                     />
                   )}
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <p className="text-sm text-slate-500 mt-2 text-center italic">파란색 실선은 자녀분의 성장 곡선이며, 회색 점선은 같은 나이 또래의 평균 키입니다.</p>
+            <p className="text-xs text-slate-500 mt-3 text-center">
+              진한 실선은 실제 측정값, 점선은 참고 범위입니다. 동일한 환경에서 반복 측정한 데이터일수록 해석 정확도가 높습니다.
+            </p>
           </div>
 
           {/* Footer */}
