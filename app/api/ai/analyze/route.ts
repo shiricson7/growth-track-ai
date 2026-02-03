@@ -83,7 +83,7 @@ IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN 
                 type: 'number',
               },
             },
-            required: ['analysis'],
+            required: ['analysis', 'predictedHeight'],
           },
         },
       },
@@ -97,7 +97,7 @@ IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN 
 
     return NextResponse.json({
       analysis: data.analysis || [],
-      predictedHeight: data.predictedHeight,
+      predictedHeight: data.predictedHeight ?? null,
     });
   } catch (error: any) {
     console.error('AI analyze error', error);
