@@ -5,6 +5,7 @@ import { Patient, GrowthPoint, LabResult } from '../types';
 import { Printer, Download, Star } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { aiEnabled, aiService } from '../src/services/ai';
+import { growthStandards } from '../src/utils/growthStandards';
 import { ClinicSettings } from './Settings';
 import { api } from '../src/services/api';
 
@@ -185,12 +186,30 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   const [lastUpdated, setLastUpdated] = React.useState<string | null>(null);
   const [isPrinting, setIsPrinting] = React.useState(false);
   const [reportPredictedHeight, setReportPredictedHeight] = React.useState<number | undefined>(aiPredictedHeight);
+  const [standardsReady, setStandardsReady] = React.useState(false);
   const { summaryContent, restContent } = React.useMemo(() => splitReportContent(reportContent), [reportContent]);
   const growthSeries = React.useMemo(() => {
     return (growthData || [])
       .filter((p) => Number.isFinite(p.age) && Number.isFinite(p.height))
       .sort((a, b) => a.age - b.age);
   }, [growthData]);
+  const latestMeasurement = React.useMemo(() => {
+    const patientPoints = (growthData || []).filter((p: any) => (p as any).isPatient && ((p as any).height || (p as any).weight));
+    if (patientPoints.length === 0) return null;
+    return [...patientPoints].sort((a: any, b: any) => {
+      if (a.date && b.date) return new Date(b.date).getTime() - new Date(a.date).getTime();
+      return (b.age ?? 0) - (a.age ?? 0);
+    })[0];
+  }, [growthData]);
+  const latestHeight = typeof latestMeasurement?.height === 'number' ? latestMeasurement.height : null;
+  const latestWeight = typeof latestMeasurement?.weight === 'number' ? latestMeasurement.weight : null;
+  const latestAge = typeof latestMeasurement?.age === 'number' ? latestMeasurement.age : null;
+  const bmiValue =
+    latestHeight && latestWeight ? latestWeight / Math.pow(latestHeight / 100, 2) : null;
+  const heightPercentile = React.useMemo(() => {
+    if (!standardsReady || !latestAge || !latestHeight) return null;
+    return growthStandards.calculatePercentile(patient.gender, latestAge, latestHeight);
+  }, [standardsReady, latestAge, latestHeight, patient.gender]);
   const recentGrowthVelocity = React.useMemo(() => {
     if (growthSeries.length < 2) return null;
     const windowSize = growthSeries.length >= 4 ? 4 : Math.min(3, growthSeries.length);
@@ -206,6 +225,10 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
     const handleAfterPrint = () => setIsPrinting(false);
     window.addEventListener('afterprint', handleAfterPrint);
     return () => window.removeEventListener('afterprint', handleAfterPrint);
+  }, []);
+
+  React.useEffect(() => {
+    growthStandards.load().then(() => setStandardsReady(true));
   }, []);
 
   React.useEffect(() => {
@@ -416,8 +439,58 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
             </p>
           </div>
 
+          {/* Current Status Table */}
+          <div className="mt-10 print-section">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                <h3 className="text-lg font-bold text-slate-800">현재 체격 요약</h3>
+                <span className="text-xs text-slate-400">
+                  기준일: {latestMeasurement?.date || '기록 없음'}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
+                  <div className="text-xs text-slate-500 mb-1">현재 키</div>
+                  <div className="flex items-end gap-2">
+                    <span className="text-2xl font-bold text-slate-900">
+                      {latestHeight ? latestHeight.toFixed(1) : '-'}
+                    </span>
+                    <span className="text-sm text-slate-500">cm</span>
+                  </div>
+                  {heightPercentile !== null && (
+                    <span className="inline-flex mt-2 items-center rounded-full bg-blue-50 text-blue-700 px-2.5 py-1 text-xs font-semibold">
+                      키 백분위 {heightPercentile.toFixed(1)}%
+                    </span>
+                  )}
+                </div>
+                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
+                  <div className="text-xs text-slate-500 mb-1">현재 체중</div>
+                  <div className="flex items-end gap-2">
+                    <span className="text-2xl font-bold text-slate-900">
+                      {latestWeight ? latestWeight.toFixed(1) : '-'}
+                    </span>
+                    <span className="text-sm text-slate-500">kg</span>
+                  </div>
+                </div>
+                <div className="border border-blue-100 rounded-xl p-4 bg-blue-50">
+                  <div className="text-xs text-blue-700 mb-1 font-semibold">BMI 백분위</div>
+                  <div className="flex items-end gap-2">
+                    <span className="text-3xl font-bold text-blue-700">-</span>
+                    <span className="text-sm text-blue-600">%</span>
+                  </div>
+                  <div className="text-xs text-blue-600 mt-2">
+                    BMI {bmiValue ? bmiValue.toFixed(1) : '-'} kg/m²
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 mt-3">
+                BMI 백분위는 연령·성별 표준표가 필요합니다. 표준표 연동 시 자동 계산됩니다.
+              </p>
+            </div>
+          </div>
+
           {/* Footer */}
-          <div className="mt-20 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm print-section">
+          <div className="mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm print-section">
             <p>{settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}</p>
           </div>
         </div>
@@ -469,6 +542,36 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
               )}
             </>
           )}
+        </div>
+
+        <div className="print-section mt-6">
+          <div className="border border-slate-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-slate-800">현재 체격 요약</h3>
+              <span className="text-xs text-slate-400">기준일: {latestMeasurement?.date || '기록 없음'}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              <div className="border border-slate-100 rounded-lg p-3 bg-slate-50">
+                <div className="text-slate-500">현재 키</div>
+                <div className="font-bold text-slate-900">{latestHeight ? latestHeight.toFixed(1) : '-'} cm</div>
+                {heightPercentile !== null && (
+                  <div className="text-blue-700 font-semibold mt-1">키 백분위 {heightPercentile.toFixed(1)}%</div>
+                )}
+              </div>
+              <div className="border border-slate-100 rounded-lg p-3 bg-slate-50">
+                <div className="text-slate-500">현재 체중</div>
+                <div className="font-bold text-slate-900">{latestWeight ? latestWeight.toFixed(1) : '-'} kg</div>
+              </div>
+              <div className="border border-blue-100 rounded-lg p-3 bg-blue-50">
+                <div className="text-blue-700 font-semibold">BMI 백분위</div>
+                <div className="font-bold text-blue-700">- %</div>
+                <div className="text-blue-600 mt-1">BMI {bmiValue ? bmiValue.toFixed(1) : '-'} kg/m²</div>
+              </div>
+            </div>
+            <p className="text-[10px] text-slate-400 mt-2">
+              BMI 백분위 계산은 연령·성별 표준표가 필요합니다.
+            </p>
+          </div>
         </div>
 
         <div className="print-section mt-8 text-xs text-slate-500 border-t border-slate-200 pt-3">
