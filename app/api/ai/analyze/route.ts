@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       };
     });
 
-    const system = 'You are an expert pediatric endocrinologist. Respond in Korean.';
+    const system = 'You are an expert pediatric endocrinologist with 30+ years of experience. Respond in Korean.';
     const user = `
 Patient: ${JSON.stringify(patientData)}
 Measurements (Chronological): ${JSON.stringify(measurements)}
@@ -45,7 +45,7 @@ Please provide:
 2. Pubertal Status Assessment (use Tanner stage if provided, bone age, and lab results if available)
 3. Predicted Adult Height (PAH) in cm. Calculate based on current height, bone age, and mid-parental height if available.
 4. Recommendations for further testing or monitoring
-5. A brief summary for the parent (friendly language)
+5. Treatment direction and follow-up plan, stated clearly and clinically
 6. If IGF-1 is present, include its percentile based on Roche Elecsys reference intervals.
    Use igf1Percentile if provided. If igf1UnitMatch is false or igf1Percentile is null, do not guess.
 7. Do not give a generic "keep injecting diligently" message. If hormone levels and bone age suggest treatment may be nearing completion,
@@ -57,8 +57,9 @@ Format the output as a valid JSON object with this structure:
   "predictedHeight": number (e.g. 175.5)
 }
 Do not include markdown code blocks. Just the raw JSON.
-IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN language.
-Keep it concise: analysis array should have 4-6 items, each under 200 Korean characters, no line breaks.
+IMPORTANT: All textual analysis and recommendations MUST be in KOREAN language.
+Do NOT include a parent-friendly summary in this dashboard analysis.
+Keep it concise: analysis array should have 4-6 items, each under 300-400 Korean characters, no line breaks.
 `;
 
     const payload = {
@@ -89,7 +90,7 @@ Keep it concise: analysis array should have 4-6 items, each under 200 Korean cha
         },
       },
       temperature: 0.1,
-      max_output_tokens: 2200,
+      max_output_tokens: 3200,
     };
 
     const result = await callOpenAI(payload);
