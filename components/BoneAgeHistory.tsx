@@ -90,8 +90,8 @@ const BoneAgeHistory: React.FC<BoneAgeHistoryProps> = ({ patient, measurements, 
                                     const isEditing = editingId === record.id;
                                     const ca = parseFloat(calculateAge(record.date));
                                     const ba = parseFloat(record.boneAge?.toString() || '0');
-                                    const gap = (ba - ca).toFixed(1);
-                                    const gapColor = ba - ca > 1 ? 'text-red-500' : (ba - ca < -1 ? 'text-blue-500' : 'text-slate-600');
+                                    const gapValue = Number((ba - ca).toFixed(1));
+                                    const gapColor = gapValue > 1 ? 'text-red-500' : (gapValue < -1 ? 'text-blue-500' : 'text-slate-600');
 
                                     return (
                                         <tr key={record.id} className="hover:bg-slate-50">
@@ -125,7 +125,7 @@ const BoneAgeHistory: React.FC<BoneAgeHistoryProps> = ({ patient, measurements, 
                                                 )}
                                             </td>
                                             <td className={`px-4 py-3 font-medium ${gapColor}`}>
-                                                {gap > 0 ? `+${gap}` : gap}세
+                                                {gapValue > 0 ? `+${gapValue}` : gapValue}세
                                             </td>
                                             <td className="px-4 py-3 text-right">
                                                 {isEditing ? (
