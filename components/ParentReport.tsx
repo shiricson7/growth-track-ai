@@ -58,36 +58,46 @@ const REPORT_COLORS = {
 
 const RecentGrowthSummary: React.FC<{ points: GrowthPoint[]; velocity: number | null }> = ({ points, velocity }) => {
   const recentPoints = points.length > 5 ? points.slice(-5) : points;
-  const chart = buildGrowthPolyline(recentPoints);
   const velocityText = Number.isFinite(velocity)
     ? `최근 성장속도는 ${velocity?.toFixed(1)} cm/년 입니다.`
     : '최근 성장속도는 데이터가 부족해 계산할 수 없습니다.';
 
   return (
-    <div className="mt-6 border border-slate-200 rounded-lg bg-white p-4">
-      <div className="text-sm font-semibold text-slate-800 mb-2">최근 성장 추이</div>
+    <div className="mt-6 border border-slate-200 rounded-xl bg-white p-4">
+      <div className="text-sm font-semibold text-slate-800 mb-3">최근 성장 추이</div>
       {recentPoints.length < 2 ? (
         <p className="text-sm text-slate-500">최근 성장 데이터가 충분하지 않습니다.</p>
       ) : (
         <div className="flex flex-col md:flex-row md:items-center gap-4">
-          <div className="flex-1">
-            <svg
-              width="100%"
-              viewBox={`0 0 ${chart.width} ${chart.height}`}
-              preserveAspectRatio="none"
-              className="h-24 w-full"
-            >
-              <rect x="0" y="0" width={chart.width} height={chart.height} fill="#f8fafc" rx="8" />
-              <polyline
-                fill="none"
-                stroke={REPORT_COLORS.patient}
-                strokeWidth="2.5"
-                points={chart.polyline}
-              />
-              {chart.dots.map((dot, idx) => (
-                <circle key={idx} cx={dot.cx} cy={dot.cy} r="3" fill={REPORT_COLORS.patient} />
-              ))}
-            </svg>
+          <div className="flex-1 h-[120px] min-h-[120px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={220} minHeight={110}>
+              <LineChart data={recentPoints} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis
+                  dataKey="age"
+                  unit="세"
+                  stroke="#94a3b8"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={['auto', 'auto']}
+                  unit="cm"
+                  stroke="#94a3b8"
+                  tick={{ fontSize: 11 }}
+                  tickLine={false}
+                  width={32}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="height"
+                  stroke={REPORT_COLORS.patient}
+                  strokeWidth={2.5}
+                  dot={{ r: 3, strokeWidth: 2, fill: '#ffffff' }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
           <div className="text-sm text-slate-700 whitespace-nowrap">{velocityText}</div>
         </div>
@@ -332,7 +342,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
 
           {/* Simplified Chart */}
           <div className="mb-10 print-section">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
               <h2 className="text-xl font-bold text-slate-800">성장 추이 (Growth Trajectory)</h2>
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 text-blue-700 px-3 py-1 border border-blue-100">
@@ -351,17 +361,10 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                 )}
               </div>
             </div>
-            <div
-              className="h-[320px] min-h-[320px] w-full min-w-0 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-50 p-4 shadow-sm"
-              style={{
-                backgroundImage:
-                  'linear-gradient(to right, rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.12) 1px, transparent 1px)',
-                backgroundSize: '32px 32px',
-              }}
-            >
+            <div className="h-[320px] min-h-[320px] w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={220}>
-                <LineChart data={growthData} margin={{ top: 10, right: 24, left: 10, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />
+                <LineChart data={growthData} margin={{ top: 10, right: 24, left: 8, bottom: 6 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis
                     dataKey="age"
                     unit="세"
@@ -380,9 +383,9 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                     type="monotone"
                     dataKey="height"
                     stroke={REPORT_COLORS.patient}
-                    strokeWidth={3.5}
-                    dot={{ r: 4, strokeWidth: 2, fill: '#ffffff' }}
-                    activeDot={{ r: 6 }}
+                    strokeWidth={3}
+                    dot={{ r: 3.5, strokeWidth: 2, fill: '#ffffff' }}
+                    activeDot={{ r: 5 }}
                     name="현재 성장"
                   />
                   <Line
@@ -409,7 +412,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
               </ResponsiveContainer>
             </div>
             <p className="text-xs text-slate-500 mt-3 text-center">
-              진한 실선은 실제 측정값, 점선은 참고 범위입니다. 동일한 환경에서 반복 측정한 데이터일수록 해석 정확도가 높습니다.
+              실선은 실제 측정값, 점선은 또래 평균/예측 참고선입니다.
             </p>
           </div>
 
