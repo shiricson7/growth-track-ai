@@ -10,8 +10,13 @@ interface PatientFormProps {
   onCancel: () => void;
 }
 
+type PatientFormState = Partial<Patient> & {
+  height?: number;
+  weight?: number;
+};
+
 const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel }) => {
-  const [formData, setFormData] = useState<Partial<Patient>>(initialData || {
+  const [formData, setFormData] = useState<PatientFormState>(initialData || {
     name: '',
     dob: '',
     gender: 'Male',
