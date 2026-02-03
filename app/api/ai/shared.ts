@@ -40,6 +40,16 @@ export const extractOutputText = (data: any) => {
   return '';
 };
 
+export const extractOutputJson = (data: any) => {
+  if (!data || !Array.isArray(data.output)) return null;
+  for (const item of data.output) {
+    if (!Array.isArray(item.content)) continue;
+    const jsonPart = item.content.find((c: any) => c.type === 'output_json');
+    if (jsonPart && jsonPart.json) return jsonPart.json;
+  }
+  return null;
+};
+
 export const stripCodeFences = (text: string) =>
   text.replace(/```json/g, '').replace(/```/g, '').trim();
 

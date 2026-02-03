@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { callOpenAI, extractOutputText, OPENAI_MODEL, safeJsonParse } from '../shared';
+import { callOpenAI, extractOutputJson, extractOutputText, OPENAI_MODEL, safeJsonParse } from '../shared';
 import {
   calculateIGF1Percentile,
   getAgeYearsAtDate,
@@ -92,8 +92,8 @@ IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN 
     };
 
     const result = await callOpenAI(payload);
-    const text = extractOutputText(result);
-    const data = safeJsonParse(text);
+    const json = extractOutputJson(result);
+    const data = json ?? safeJsonParse(extractOutputText(result));
 
     return NextResponse.json({
       analysis: data.analysis || [],
