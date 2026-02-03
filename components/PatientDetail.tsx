@@ -311,6 +311,39 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           </div>
         </div>
 
+        {/* AI Insights */}
+        <div className="bg-gradient-to-br from-indigo-50 to-white rounded-xl shadow-sm border border-indigo-100 p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold flex items-center gap-2 text-indigo-900">
+              <Brain className="text-indigo-600" /> AI 임상 분석 (GPT-5.2)
+            </h2>
+            <button
+              onClick={onAnalyzeGrowth}
+              disabled={isAnalyzing || !aiAvailable}
+              className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+            >
+              {!aiAvailable ? 'AI 비활성' : isAnalyzing ? '분석 중...' : '분석 실행'}
+            </button>
+          </div>
+
+          {aiAnalysis ? (
+            <ul className="space-y-3">
+              {aiAnalysis.map((insight, idx) => (
+                <li key={idx} className="flex gap-3 text-sm text-indigo-900 leading-relaxed text-justify">
+                  <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-indigo-400" />
+                  <div dangerouslySetInnerHTML={{ __html: insight.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-sm text-indigo-400 text-center py-4">
+              {aiAvailable
+                ? '데이터 기반 AI 분석을 실행하려면 버튼을 클릭하세요.'
+                : 'AI 기능이 비활성화되어 있습니다. API 키 설정 후 사용 가능합니다.'}
+            </div>
+          )}
+        </div>
+
         {/* Bone Age Chart */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <div className="flex justify-between items-center mb-6">
@@ -395,39 +428,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   </div>
                 ))}
             </div>
-          </div>
-
-          {/* AI Insights */}
-          <div className="bg-gradient-to-br from-indigo-50 to-white rounded-xl shadow-sm border border-indigo-100 p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold flex items-center gap-2 text-indigo-900">
-                <Brain className="text-indigo-600" /> AI 임상 분석 (GPT-5.2)
-              </h2>
-              <button
-                onClick={onAnalyzeGrowth}
-                disabled={isAnalyzing || !aiAvailable}
-                className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
-              >
-                {!aiAvailable ? 'AI 비활성' : isAnalyzing ? '분석 중...' : '분석 실행'}
-              </button>
-            </div>
-
-            {aiAnalysis ? (
-              <ul className="space-y-3">
-                {aiAnalysis.map((insight, idx) => (
-                  <li key={idx} className="flex gap-3 text-sm text-indigo-900 leading-relaxed text-justify">
-                    <div className="mt-1.5 min-w-[6px] h-[6px] rounded-full bg-indigo-400" />
-                    <div dangerouslySetInnerHTML={{ __html: insight.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-sm text-indigo-400 text-center py-4">
-                {aiAvailable
-                  ? '데이터 기반 AI 분석을 실행하려면 버튼을 클릭하세요.'
-                  : 'AI 기능이 비활성화되어 있습니다. API 키 설정 후 사용 가능합니다.'}
-              </div>
-            )}
           </div>
 
           {/* Measurement History */}
