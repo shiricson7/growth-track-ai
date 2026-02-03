@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Patient, Measurement, LabResult, ClinicInfo } from '../../types';
+import { Patient, Measurement, LabResult, ClinicInfo, AiReport, AiReportKind } from '../../types';
 
 export const api = {
     async getMyClinic(): Promise<ClinicInfo | null> {
@@ -404,5 +404,65 @@ export const api = {
             .eq('id', id);
 
         if (error) throw error;
+    },
+
+    // --- AI Reports ---
+    async getAiReport(patientId: string, kind: AiReportKind): Promise<AiReport | null> {
+        const { data, error } = await supabase
+            .from('ai_reports')
+            .select('*')
+            .eq('patient_id', patientId)
+            .eq('kind', kind)
+            .maybeSingle();
+
+        if (error) throw error;
+        if (!data) return null;
+        return {
+            id: data.id,
+            patientId: data.patient_id,
+            kind: data.kind,
+            analysis: data.analysis,
+            predictedHeight: data.predicted_height,
+            markdownReport: data.markdown_report,
+            updatedAt: data.updated_at,
+            sourceModel: data.source_model
+        } as AiReport;
+    },
+
+    async upsertAiReport(input: {
+        patientId: string;
+        kind: AiReportKind;
+        analysis?: string[] | null;
+        predictedHeight?: number | null;
+        markdownReport?: string | null;
+        sourceModel?: string | null;
+    }): Promise<AiReport> {
+        const payload = {
+            patient_id: input.patientId,
+            kind: input.kind,
+            analysis: input.analysis ?? null,
+            predicted_height: input.predictedHeight ?? null,
+            markdown_report: input.markdownReport ?? null,
+            source_model: input.sourceModel ?? null,
+            updated_at: new Date().toISOString()
+        };
+
+        const { data, error } = await supabase
+            .from('ai_reports')
+            .upsert(payload, { onConflict: 'patient_id,kind' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return {
+            id: data.id,
+            patientId: data.patient_id,
+            kind: data.kind,
+            analysis: data.analysis,
+            predictedHeight: data.predicted_height,
+            markdownReport: data.markdown_report,
+            updatedAt: data.updated_at,
+            sourceModel: data.source_model
+        } as AiReport;
     }
 };

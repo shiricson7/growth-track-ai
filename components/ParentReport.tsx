@@ -6,6 +6,7 @@ import { Printer, Download, Star } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { aiEnabled, aiService } from '../src/services/ai';
 import { ClinicSettings } from './Settings';
+import { api } from '../src/services/api';
 
 const splitReportContent = (content: string) => {
   if (!content) return { summaryContent: '', restContent: '' };
@@ -171,6 +172,7 @@ interface ParentReportProps {
 const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labResults, onBack, settings, aiPredictedHeight }) => {
   const [reportContent, setReportContent] = React.useState<string>('');
   const [loading, setLoading] = React.useState(true);
+  const [lastUpdated, setLastUpdated] = React.useState<string | null>(null);
   const [isPrinting, setIsPrinting] = React.useState(false);
   const [reportPredictedHeight, setReportPredictedHeight] = React.useState<number | undefined>(aiPredictedHeight);
   const { summaryContent, restContent } = React.useMemo(() => splitReportContent(reportContent), [reportContent]);
@@ -205,23 +207,23 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   }, [isPrinting]);
 
   React.useEffect(() => {
-    const generate = async () => {
+    const loadCached = async () => {
       setLoading(true);
       try {
-        if (!aiEnabled) {
-          setReportContent('# AI 비활성화\n\n관리자에게 API 키 설정을 요청해주세요.');
-          setLoading(false);
-          return;
+        const cached = await api.getAiReport(patient.id, 'parent_report');
+        if (cached?.markdownReport) {
+          setReportContent(cached.markdownReport);
+          setLastUpdated(cached.updatedAt || null);
+        } else {
+          setReportContent('');
         }
-        const report = await aiService.generateParentReport(patient, labResults, patient.medications);
-        setReportContent(report);
       } catch (e) {
-        setReportContent("# 리포트 생성 실패\n\n죄송합니다. AI 서비스 연결에 실패했습니다.");
+        setReportContent('');
       } finally {
         setLoading(false);
       }
     };
-    generate();
+    loadCached();
   }, [patient.id]);
 
   React.useEffect(() => {
@@ -230,21 +232,28 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
     }
   }, [aiPredictedHeight]);
 
-  React.useEffect(() => {
-    if (Number.isFinite(reportPredictedHeight)) return;
-    if (!aiEnabled) return;
-    const fetchPredictedHeight = async () => {
-      try {
-        const result = await aiService.analyzeGrowth(patient, growthData, labResults);
-        if (Number.isFinite(result.predictedHeight)) {
-          setReportPredictedHeight(result.predictedHeight);
-        }
-      } catch (e) {
-        // Silent fallback to avoid blocking report generation
-      }
-    };
-    fetchPredictedHeight();
-  }, [reportPredictedHeight, patient.id, growthData, labResults]);
+  const handleGenerateReport = async () => {
+    if (!aiEnabled) {
+      setReportContent('# AI 비활성화\n\n관리자에게 API 키 설정을 요청해주세요.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const report = await aiService.generateParentReport(patient, labResults, patient.medications);
+      setReportContent(report);
+      setLastUpdated(new Date().toISOString());
+      await api.upsertAiReport({
+        patientId: patient.id,
+        kind: 'parent_report',
+        markdownReport: report,
+        sourceModel: 'gpt-5.2-2025-12-11',
+      });
+    } catch (e) {
+      setReportContent('# 리포트 생성 실패\n\n죄송합니다. AI 서비스 연결에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500 print-report-container">
@@ -252,7 +261,17 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         {/* Toolbar */}
         <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 print-hidden">
           <button onClick={onBack} className="text-slate-600 hover:text-slate-900 font-medium">← 대시보드로 돌아가기</button>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            {lastUpdated && (
+              <span className="text-xs text-slate-400">최근 생성: {new Date(lastUpdated).toLocaleDateString()}</span>
+            )}
+            <button
+              onClick={handleGenerateReport}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 font-medium disabled:opacity-50"
+            >
+              <Star size={18} /> AI 리포트 새로 생성
+            </button>
             <button
               onClick={() => setIsPrinting(true)}
               disabled={isPrinting}
@@ -289,7 +308,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                 <p className="text-slate-500">AI가 환자의 데이터를 분석하여 리포트를 작성 중입니다...</p>
                 <p className="text-xs text-slate-400">약 5-10초 정도 소요됩니다.</p>
               </div>
-            ) : (
+            ) : reportContent ? (
               <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 print-allow-break">
                 {summaryContent && restContent ? (
                   <>
@@ -303,6 +322,10 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                     <RecentGrowthSummary points={growthSeries} velocity={recentGrowthVelocity} />
                   </>
                 )}
+              </div>
+            ) : (
+              <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 text-slate-500">
+                저장된 AI 리포트가 없습니다. 상단의 “AI 리포트 새로 생성” 버튼을 눌러 생성해주세요.
               </div>
             )}
           </div>

@@ -172,6 +172,8 @@ function AppShell() {
 
   const loadPatientData = async (patientId: string) => {
     try {
+      setAiAnalysis(null);
+      setAiPredictedHeight(undefined);
       const [labs, meas, meds, patientFromDb] = await Promise.all([
         api.getLabResults(patientId),
         api.getMeasurements(patientId),
@@ -225,6 +227,16 @@ function AppShell() {
       ].sort((a: any, b: any) => a.age - b.age);
 
       setGrowthData(combinedData);
+
+      try {
+        const cached = await api.getAiReport(patient.id, 'dashboard');
+        setAiAnalysis(cached?.analysis || null);
+        setAiPredictedHeight(cached?.predictedHeight ?? undefined);
+      } catch (e) {
+        console.warn('Failed to load cached AI analysis', e);
+        setAiAnalysis(null);
+        setAiPredictedHeight(undefined);
+      }
     } catch (e) {
       console.error('Failed to load patient details', e);
     }
@@ -243,6 +255,13 @@ function AppShell() {
       const result = await aiService.analyzeGrowth(currentPatient, growthData, labResults);
       setAiAnalysis(result.analysis);
       if (result.predictedHeight) setAiPredictedHeight(result.predictedHeight);
+      await api.upsertAiReport({
+        patientId: currentPatient.id,
+        kind: 'dashboard',
+        analysis: result.analysis,
+        predictedHeight: result.predictedHeight ?? null,
+        sourceModel: 'gpt-5.2-2025-12-11',
+      });
     } catch (error: any) {
       console.error('AI Analysis failed', error);
       alert(error?.message || 'AI Analysis failed. Check API Key.');

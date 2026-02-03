@@ -10,6 +10,19 @@ export interface LabResult {
   isManual?: boolean; // OCR manual entry flag
 }
 
+export type AiReportKind = 'dashboard' | 'parent_report';
+
+export interface AiReport {
+  id: string;
+  patientId: string;
+  kind: AiReportKind;
+  analysis?: string[] | null;
+  predictedHeight?: number | null;
+  markdownReport?: string | null;
+  updatedAt?: string | null;
+  sourceModel?: string | null;
+}
+
 export interface GrowthPoint {
   age: number; // in years
   height: number; // in cm

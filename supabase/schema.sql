@@ -84,6 +84,20 @@ create table if not exists lab_results (
   file_path text 
 );
 
+-- 5. AI Reports Table
+create table if not exists ai_reports (
+  id uuid default uuid_generate_v4() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  patient_id uuid references patients(id) on delete cascade not null,
+  kind text check (kind in ('dashboard', 'parent_report')) not null,
+  analysis jsonb,
+  predicted_height numeric,
+  markdown_report text,
+  source_model text,
+  unique (patient_id, kind)
+);
+
 
 -- 5. Security (RLS) & Policies
 -- Using DO blocks to safely create policies only if they don't exist
@@ -294,6 +308,49 @@ begin
         select 1 from patients p
         join clinic_memberships m on m.clinic_id = p.clinic_id
         where p.id = lab_results.patient_id and m.user_id = auth.uid()
+      ));
+  end if;
+end $$;
+
+-- AI Reports
+alter table ai_reports enable row level security;
+drop policy if exists "Enable all access for all users" on ai_reports;
+do $$
+begin
+  if not exists (select 1 from pg_policies where tablename = 'ai_reports' and policyname = 'Clinic members can read ai reports') then
+    create policy "Clinic members can read ai reports" on ai_reports
+      for select using (exists (
+        select 1 from patients p
+        join clinic_memberships m on m.clinic_id = p.clinic_id
+        where p.id = ai_reports.patient_id and m.user_id = auth.uid()
+      ));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'ai_reports' and policyname = 'Clinic members can insert ai reports') then
+    create policy "Clinic members can insert ai reports" on ai_reports
+      for insert with check (exists (
+        select 1 from patients p
+        join clinic_memberships m on m.clinic_id = p.clinic_id
+        where p.id = ai_reports.patient_id and m.user_id = auth.uid()
+      ));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'ai_reports' and policyname = 'Clinic members can update ai reports') then
+    create policy "Clinic members can update ai reports" on ai_reports
+      for update using (exists (
+        select 1 from patients p
+        join clinic_memberships m on m.clinic_id = p.clinic_id
+        where p.id = ai_reports.patient_id and m.user_id = auth.uid()
+      )) with check (exists (
+        select 1 from patients p
+        join clinic_memberships m on m.clinic_id = p.clinic_id
+        where p.id = ai_reports.patient_id and m.user_id = auth.uid()
+      ));
+  end if;
+  if not exists (select 1 from pg_policies where tablename = 'ai_reports' and policyname = 'Clinic members can delete ai reports') then
+    create policy "Clinic members can delete ai reports" on ai_reports
+      for delete using (exists (
+        select 1 from patients p
+        join clinic_memberships m on m.clinic_id = p.clinic_id
+        where p.id = ai_reports.patient_id and m.user_id = auth.uid()
       ));
   end if;
 end $$;
