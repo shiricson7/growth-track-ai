@@ -320,7 +320,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           </div>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={growthData.filter(d => d.boneAge || d.percentile50)} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <LineChart
+                data={growthData.filter(
+                  (d) => (d as any).boneAge || (d as any).percentile50
+                )}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="age" type="number" domain={['dataMin', 'dataMax']} unit="세" stroke="#64748b" />
                 <YAxis dataKey="boneAge" domain={['auto', 'auto']} unit="세" stroke="#64748b" />
