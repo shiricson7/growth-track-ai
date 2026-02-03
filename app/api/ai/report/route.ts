@@ -74,9 +74,9 @@ Rules:
         { role: 'system', content: [{ type: 'input_text', text: system }] },
         { role: 'user', content: [{ type: 'input_text', text: user }] },
       ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
+      text: {
+        format: {
+          type: 'json_schema',
           name: 'growth_report',
           strict: true,
           schema: {

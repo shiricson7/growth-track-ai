@@ -62,16 +62,16 @@ Do not include markdown formatting or extra text.
           ],
         },
       ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
+      text: {
+        format: {
+          type: 'json_schema',
           name: 'lab_ocr',
           strict: true,
           schema: {
             type: 'object',
             additionalProperties: false,
             properties: {
-              collectionDate: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+              collectionDate: { type: ['string', 'null'] },
               results: {
                 type: 'array',
                 items: {
