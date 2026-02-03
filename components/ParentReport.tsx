@@ -6,6 +6,7 @@ import { Printer, Download, Star } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 import { aiEnabled, aiService } from '../src/services/ai';
 import { growthStandards } from '../src/utils/growthStandards';
+import { bmiStandards } from '../src/utils/bmiStandards';
 import { ClinicSettings } from './Settings';
 import { api } from '../src/services/api';
 
@@ -187,6 +188,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   const [isPrinting, setIsPrinting] = React.useState(false);
   const [reportPredictedHeight, setReportPredictedHeight] = React.useState<number | undefined>(aiPredictedHeight);
   const [standardsReady, setStandardsReady] = React.useState(false);
+  const [bmiStandardsReady, setBmiStandardsReady] = React.useState(false);
   const { summaryContent, restContent } = React.useMemo(() => splitReportContent(reportContent), [reportContent]);
   const growthSeries = React.useMemo(() => {
     return (growthData || [])
@@ -210,6 +212,10 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
     if (!standardsReady || !latestAge || !latestHeight) return null;
     return growthStandards.calculatePercentile(patient.gender, latestAge, latestHeight);
   }, [standardsReady, latestAge, latestHeight, patient.gender]);
+  const bmiPercentile = React.useMemo(() => {
+    if (!bmiStandardsReady || !latestAge || !bmiValue) return null;
+    return bmiStandards.calculatePercentile(patient.gender, latestAge, bmiValue);
+  }, [bmiStandardsReady, latestAge, bmiValue, patient.gender]);
   const recentGrowthVelocity = React.useMemo(() => {
     if (growthSeries.length < 2) return null;
     const windowSize = growthSeries.length >= 4 ? 4 : Math.min(3, growthSeries.length);
@@ -229,6 +235,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
 
   React.useEffect(() => {
     growthStandards.load().then(() => setStandardsReady(true));
+    bmiStandards.load().then(() => setBmiStandardsReady(true));
   }, []);
 
   React.useEffect(() => {
@@ -475,7 +482,9 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                 <div className="border border-blue-100 rounded-xl p-4 bg-blue-50">
                   <div className="text-xs text-blue-700 mb-1 font-semibold">BMI 백분위</div>
                   <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold text-blue-700">-</span>
+                    <span className="text-3xl font-bold text-blue-700">
+                      {bmiPercentile !== null ? bmiPercentile.toFixed(1) : '-'}
+                    </span>
                     <span className="text-sm text-blue-600">%</span>
                   </div>
                   <div className="text-xs text-blue-600 mt-2">
@@ -483,9 +492,6 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-slate-400 mt-3">
-                BMI 백분위는 연령·성별 표준표가 필요합니다. 표준표 연동 시 자동 계산됩니다.
-              </p>
             </div>
           </div>
 
@@ -564,13 +570,12 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
               </div>
               <div className="border border-blue-100 rounded-lg p-3 bg-blue-50">
                 <div className="text-blue-700 font-semibold">BMI 백분위</div>
-                <div className="font-bold text-blue-700">- %</div>
+                <div className="font-bold text-blue-700">
+                  {bmiPercentile !== null ? `${bmiPercentile.toFixed(1)} %` : '- %'}
+                </div>
                 <div className="text-blue-600 mt-1">BMI {bmiValue ? bmiValue.toFixed(1) : '-'} kg/m²</div>
               </div>
             </div>
-            <p className="text-[10px] text-slate-400 mt-2">
-              BMI 백분위 계산은 연령·성별 표준표가 필요합니다.
-            </p>
           </div>
         </div>
 
