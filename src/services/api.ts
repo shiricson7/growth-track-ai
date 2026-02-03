@@ -11,10 +11,13 @@ export const api = {
         if (error) throw error;
         if (!data || !data.clinics) return null;
 
+        const clinic = Array.isArray(data.clinics) ? data.clinics[0] : data.clinics;
+        if (!clinic) return null;
+
         return {
             id: data.clinic_id,
-            name: data.clinics.name,
-            clinicCode: data.clinics.clinic_code,
+            name: clinic.name,
+            clinicCode: clinic.clinic_code,
             role: data.role
         };
     },
