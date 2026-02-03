@@ -80,7 +80,7 @@ IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN 
                 items: { type: 'string' },
               },
               predictedHeight: {
-                type: 'number',
+                type: ['number', 'null'],
               },
             },
             required: ['analysis', 'predictedHeight'],

@@ -150,7 +150,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           </div>
 
           <div className="h-[350px] min-h-[350px] w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={300}>
               <LineChart data={growthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis
@@ -319,7 +319,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </h2>
           </div>
           <div className="h-[250px] min-h-[250px] w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={200}>
               <LineChart
                 data={growthData.filter(
                   (d) => (d as any).boneAge || (d as any).percentile50
@@ -552,7 +552,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
         ) : (
           <div className="p-6 h-[300px] min-h-[300px] w-full min-w-0">
             {trendData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={200}>
                 <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="date" stroke="#64748b" />

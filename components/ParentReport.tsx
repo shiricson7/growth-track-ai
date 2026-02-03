@@ -311,7 +311,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
           <div className="mb-10 print-section">
             <h2 className="text-xl font-bold text-slate-800 mb-4">성장 추이 (Growth Trajectory)</h2>
             <div className="h-[300px] min-h-[300px] w-full min-w-0 bg-white border border-slate-100 rounded-xl p-4">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={200}>
                 <LineChart data={growthData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="age" unit="세" stroke="#94a3b8" />
