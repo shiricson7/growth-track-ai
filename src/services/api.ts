@@ -28,11 +28,12 @@ export const api = {
             .single();
 
         if (error) throw error;
+        const created = clinic as any;
 
         return {
-            id: clinic.id,
-            name: clinic.name,
-            clinicCode: clinic.clinic_code,
+            id: created.id,
+            name: created.name,
+            clinicCode: created.clinic_code,
             role: 'owner'
         };
     },
