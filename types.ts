@@ -66,6 +66,9 @@ export interface ClinicInfo {
   name: string;
   clinicCode?: string;
   role?: 'owner' | 'member';
+  doctorName?: string | null;
+  address?: string | null;
+  phone?: string | null;
 }
 
 export interface Patient {

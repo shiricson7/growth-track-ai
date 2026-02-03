@@ -59,30 +59,27 @@ function AppShell() {
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>(undefined);
 
   // Settings State
-  const [clinicSettings, setClinicSettings] = useState<ClinicSettings>(() => {
-    if (typeof window === 'undefined') {
-      return {
-        hospitalName: 'GrowthTrack Clinic',
-        doctorName: 'Dr. Johnson',
-        address: '서울특별시 강남구 테헤란로 123',
-        phone: '(02) 555-1234',
-      };
-    }
-    const saved = localStorage.getItem('clinic_settings');
-    return saved
-      ? JSON.parse(saved)
-      : {
-          hospitalName: 'GrowthTrack Clinic',
-          doctorName: 'Dr. Johnson',
-          address: '서울특별시 강남구 테헤란로 123',
-          phone: '(02) 555-1234',
-        };
+  const [clinicSettings, setClinicSettings] = useState<ClinicSettings>({
+    hospitalName: 'GrowthTrack Clinic',
+    doctorName: 'Dr. Johnson',
+    address: '서울특별시 강남구 테헤란로 123',
+    phone: '(02) 555-1234',
   });
 
-  const updateSettings = (newSettings: ClinicSettings) => {
+  const updateSettings = async (newSettings: ClinicSettings) => {
     setClinicSettings(newSettings);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('clinic_settings', JSON.stringify(newSettings));
+    if (!clinic?.id) return;
+    try {
+      await api.updateClinicSettings(clinic.id, {
+        hospitalName: newSettings.hospitalName,
+        doctorName: newSettings.doctorName,
+        address: newSettings.address,
+        phone: newSettings.phone,
+      });
+      await loadClinic();
+    } catch (e) {
+      console.error('Failed to update clinic settings', e);
+      alert('클리닉 설정 저장에 실패했습니다.');
     }
   };
 
@@ -129,6 +126,14 @@ function AppShell() {
       const myClinic = await api.getMyClinic();
       const prevClinicId = clinic?.id || null;
       setClinic(myClinic);
+      if (myClinic) {
+        setClinicSettings((prev) => ({
+          hospitalName: myClinic.name || prev.hospitalName,
+          doctorName: myClinic.doctorName || prev.doctorName,
+          address: myClinic.address || prev.address,
+          phone: myClinic.phone || prev.phone,
+        }));
+      }
       if (!myClinic?.id) {
         setCurrentPatient(null);
         setPatients([]);

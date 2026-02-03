@@ -6,8 +6,15 @@ create table if not exists clinics (
   id uuid default uuid_generate_v4() primary key,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   name text not null,
-  clinic_code text unique default substr(replace(uuid_generate_v4()::text, '-', ''), 1, 8)
+  clinic_code text unique default substr(replace(uuid_generate_v4()::text, '-', ''), 1, 8),
+  doctor_name text,
+  address text,
+  phone text
 );
+
+alter table clinics add column if not exists doctor_name text;
+alter table clinics add column if not exists address text;
+alter table clinics add column if not exists phone text;
 
 create table if not exists clinic_memberships (
   id uuid default uuid_generate_v4() primary key,

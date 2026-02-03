@@ -5,7 +5,7 @@ export const api = {
     async getMyClinic(): Promise<ClinicInfo | null> {
         const { data, error } = await supabase
             .from('clinic_memberships')
-            .select('clinic_id, role, clinics(id, name, clinic_code)')
+            .select('clinic_id, role, clinics(id, name, clinic_code, doctor_name, address, phone)')
             .maybeSingle();
 
         if (error) throw error;
@@ -18,7 +18,10 @@ export const api = {
             id: data.clinic_id,
             name: clinic.name,
             clinicCode: clinic.clinic_code,
-            role: data.role
+            role: data.role,
+            doctorName: clinic.doctor_name ?? null,
+            address: clinic.address ?? null,
+            phone: clinic.phone ?? null
         };
     },
 
@@ -34,13 +37,36 @@ export const api = {
             id: created.id,
             name: created.name,
             clinicCode: created.clinic_code,
-            role: 'owner'
+            role: 'owner',
+            doctorName: created.doctor_name ?? null,
+            address: created.address ?? null,
+            phone: created.phone ?? null
         };
     },
 
     async joinClinicByCode(code: string): Promise<void> {
         const { error } = await supabase.rpc('join_clinic_by_code', { p_code: code });
         if (error) throw error;
+    },
+
+    async updateClinicSettings(clinicId: string, settings: { doctorName: string; address: string; phone: string; hospitalName?: string }) {
+        const dbUpdates: any = {
+            doctor_name: settings.doctorName,
+            address: settings.address,
+            phone: settings.phone
+        };
+        if (settings.hospitalName) {
+            dbUpdates.name = settings.hospitalName;
+        }
+        const { data, error } = await supabase
+            .from('clinics')
+            .update(dbUpdates)
+            .eq('id', clinicId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
     },
 
     // --- Patients ---
@@ -93,7 +119,7 @@ export const api = {
             return {
                 ...p,
                 dob: p.birth_date,
-                ssn: p.registration_number,
+                ssn: undefined,
                 clinicId: p.clinic_id,
                 // heightFather/Mother
                 heightFather: p.height_father,
@@ -141,7 +167,7 @@ export const api = {
         return {
             ...p,
             dob: p.birth_date,
-            ssn: p.registration_number,
+            ssn: undefined,
             clinicId: p.clinic_id,
             heightFather: p.height_father,
             heightMother: p.height_mother,
@@ -161,7 +187,7 @@ export const api = {
             name: patient.name,
             birth_date: patient.dob,
             gender: patient.gender.toLowerCase(), // 'Male' -> 'male'
-            registration_number: patient.ssn,
+            // registration_number intentionally not stored
             chart_number: patient.chartNumber,
             height_father: patient.heightFather || null,
             height_mother: patient.heightMother || null,
@@ -183,7 +209,7 @@ export const api = {
         return {
             ...p,
             dob: p.birth_date,
-            ssn: p.registration_number,
+            ssn: undefined,
             clinicId: p.clinic_id
         } as Patient;
     },
@@ -194,7 +220,7 @@ export const api = {
         if (updates.name) dbUpdates.name = updates.name;
         if (updates.dob) dbUpdates.birth_date = updates.dob;
         if (updates.gender) dbUpdates.gender = updates.gender.toLowerCase();
-        if (updates.ssn) dbUpdates.registration_number = updates.ssn;
+        // registration_number intentionally not stored/updated
         if (updates.chartNumber) dbUpdates.chart_number = updates.chartNumber;
         if (updates.heightFather) dbUpdates.height_father = updates.heightFather;
         if (updates.heightMother) dbUpdates.height_mother = updates.heightMother;
@@ -213,7 +239,7 @@ export const api = {
         return {
             ...p,
             dob: p.birth_date,
-            ssn: p.registration_number,
+            ssn: undefined,
             boneAge: p.bone_age,
             clinicId: p.clinic_id
         } as Patient;

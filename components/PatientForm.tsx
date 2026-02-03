@@ -30,7 +30,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, initialHeight, i
     targetHeight: initialData?.targetHeight || 0,
     medications: initialData?.medications || [],
     chartNumber: initialData?.chartNumber || '',
-    ssn: initialData?.ssn || '',
     visitDate: initialData?.visitDate || new Date().toISOString().split('T')[0] // Default to today
   });
 
@@ -101,7 +100,6 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, initialHeight, i
       targetHeight: calculateTargetHeight(),
       predictedAdultHeight: calculateTargetHeight() - 2, // Mock prediction logic
       medications: formData.medications || [],
-      ssn: ssnInput,
       chartNumber: formData.chartNumber,
       tannerStage: formData.tannerStage,
       heightFather: parentHeight.father,
@@ -144,13 +142,12 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, initialHeight, i
               <label className="block text-sm font-medium text-slate-700 mb-1">주민등록번호</label>
               <input
                 type="text"
-                required
                 className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 font-mono"
                 value={ssnInput}
                 onChange={handleSSNChange}
                 placeholder="YYMMDD-1234567"
               />
-              <p className="text-xs text-slate-500 mt-1">생년월일과 성별이 자동으로 입력됩니다.</p>
+              <p className="text-xs text-slate-500 mt-1">입력 시 생년월일과 성별이 자동으로 입력됩니다. (DB에는 저장되지 않습니다.)</p>
             </div>
 
             <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">

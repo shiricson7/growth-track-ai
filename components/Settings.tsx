@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Save, Building, Phone, MapPin, User, Settings as SettingsIcon } from 'lucide-react';
 
 export interface ClinicSettings {
@@ -18,6 +18,10 @@ interface SettingsProps {
 const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
     const [formData, setFormData] = useState<ClinicSettings>(settings);
     const [isSaved, setIsSaved] = useState(false);
+
+    useEffect(() => {
+        setFormData(settings);
+    }, [settings]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
