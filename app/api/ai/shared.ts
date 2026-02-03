@@ -42,3 +42,20 @@ export const extractOutputText = (data: any) => {
 
 export const stripCodeFences = (text: string) =>
   text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+export const safeJsonParse = (text: string) => {
+  const cleaned = stripCodeFences(text);
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        // fallthrough
+      }
+    }
+  }
+  throw new Error('AI 응답 파싱 실패');
+};
