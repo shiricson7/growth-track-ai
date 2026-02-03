@@ -30,6 +30,10 @@ export interface GrowthPoint {
   percentile50?: number;
   percentile97?: number;
   predicted?: number; // AI Prediction
+  weight?: number;
+  boneAge?: number;
+  date?: string;
+  isPatient?: boolean;
 }
 
 export interface Measurement {
