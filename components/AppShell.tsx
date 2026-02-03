@@ -92,6 +92,13 @@ function AppShell() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const [measurements, setMeasurements] = useState<any[]>([]);
+  const latestMeasurementForEdit = React.useMemo(() => {
+    if (!editingPatient) return null;
+    const sorted = [...measurements]
+      .filter((m) => (m.height && m.height > 0) || (m.weight && m.weight > 0))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return sorted[0] || null;
+  }, [editingPatient, measurements]);
 
   // Auth/session bootstrap
   useEffect(() => {
@@ -564,6 +571,8 @@ function AppShell() {
               {currentView === 'patient-form' && (
                 <PatientForm
                   initialData={editingPatient}
+                  initialHeight={editingPatient ? latestMeasurementForEdit?.height : undefined}
+                  initialWeight={editingPatient ? latestMeasurementForEdit?.weight : undefined}
                   onSave={handleSavePatient}
                   onCancel={() => setCurrentView('dashboard')}
                 />

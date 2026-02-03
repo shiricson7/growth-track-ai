@@ -6,6 +6,8 @@ import { Save, User, Calendar, Activity, Users, Hash, FileInput } from 'lucide-r
 
 interface PatientFormProps {
   initialData?: Patient;
+  initialHeight?: number;
+  initialWeight?: number;
   onSave: (patient: Patient) => void;
   onCancel: () => void;
 }
@@ -15,13 +17,14 @@ type PatientFormState = Partial<Patient> & {
   weight?: number;
 };
 
-const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel }) => {
-  const [formData, setFormData] = useState<PatientFormState>(initialData || {
-    name: '',
-    dob: '',
-    gender: 'Male',
-    height: 0,
-    weight: 0,
+const PatientForm: React.FC<PatientFormProps> = ({ initialData, initialHeight, initialWeight, onSave, onCancel }) => {
+  const [formData, setFormData] = useState<PatientFormState>({
+    ...(initialData || {}),
+    name: initialData?.name || '',
+    dob: initialData?.dob || '',
+    gender: initialData?.gender || 'Male',
+    height: initialHeight ?? (initialData as any)?.height ?? 0,
+    weight: initialWeight ?? (initialData as any)?.weight ?? 0,
     boneAge: initialData?.boneAge || 0, // Default to 0 as it's removed from registration
     tannerStage: initialData?.tannerStage || '',
     targetHeight: initialData?.targetHeight || 0,
