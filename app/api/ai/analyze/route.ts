@@ -94,6 +94,19 @@ IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN 
     const result = await callOpenAI(payload);
     const json = extractOutputJson(result);
     const data = json ?? safeJsonParse(extractOutputText(result));
+    if (!data) {
+      console.error('AI analyze parse failed', {
+        output_text: extractOutputText(result),
+        output: result?.output,
+      });
+      return NextResponse.json(
+        {
+          analysis: ['AI 응답 파싱에 실패했습니다. 잠시 후 다시 시도해주세요.'],
+          predictedHeight: null,
+        },
+        { status: 200 }
+      );
+    }
 
     return NextResponse.json({
       analysis: data.analysis || [],

@@ -45,7 +45,7 @@ export const extractOutputJson = (data: any) => {
   for (const item of data.output) {
     if (!Array.isArray(item.content)) continue;
     const jsonPart = item.content.find((c: any) => c.type === 'output_json');
-    if (jsonPart && jsonPart.json) return jsonPart.json;
+    if (jsonPart) return jsonPart.json ?? jsonPart;
   }
   return null;
 };
@@ -54,18 +54,31 @@ export const stripCodeFences = (text: string) =>
   text.replace(/```json/g, '').replace(/```/g, '').trim();
 
 export const safeJsonParse = (text: string) => {
-  const cleaned = stripCodeFences(text);
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    if (match) {
-      try {
-        return JSON.parse(match[0]);
-      } catch {
-        // fallthrough
-      }
+  const cleaned = stripCodeFences(text || '');
+  const tryParse = (value: string) => {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  };
+
+  let parsed = tryParse(cleaned);
+  if (parsed) return parsed;
+
+  const match = cleaned.match(/[\{\[][\\s\\S]*[\}\]]/);
+  if (match) {
+    parsed = tryParse(match[0]);
+    if (parsed) return parsed;
+  }
+
+  if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+    const unescaped = tryParse(cleaned);
+    if (typeof unescaped === 'string') {
+      parsed = tryParse(unescaped);
+      if (parsed) return parsed;
     }
   }
-  throw new Error('AI 응답 파싱 실패');
+
+  return null;
 };

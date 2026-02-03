@@ -96,6 +96,18 @@ Rules:
     const result = await callOpenAI(payload);
     const json = extractOutputJson(result);
     const data = json ?? safeJsonParse(extractOutputText(result));
+    if (!data) {
+      console.error('AI report parse failed', {
+        output_text: extractOutputText(result),
+        output: result?.output,
+      });
+      return NextResponse.json(
+        {
+          markdownReport: '# AI 응답 오류\n\nAI 응답을 해석하지 못했습니다. 잠시 후 다시 시도해주세요.',
+        },
+        { status: 200 }
+      );
+    }
 
     return NextResponse.json({
       markdownReport: data.markdownReport || '',

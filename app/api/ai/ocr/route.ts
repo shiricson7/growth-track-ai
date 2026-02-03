@@ -99,6 +99,19 @@ Do not include markdown formatting or extra text.
     const result = await callOpenAI(payload);
     const json = extractOutputJson(result);
     const data = json ?? safeJsonParse(extractOutputText(result));
+    if (!data) {
+      console.error('AI OCR parse failed', {
+        output_text: extractOutputText(result),
+        output: result?.output,
+      });
+      return NextResponse.json(
+        {
+          collectionDate: null,
+          results: [],
+        },
+        { status: 200 }
+      );
+    }
 
     return NextResponse.json(data);
   } catch (error: any) {
