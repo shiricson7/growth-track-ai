@@ -3,9 +3,16 @@ import { Patient, Measurement, LabResult, ClinicInfo, AiReport, AiReportKind } f
 
 export const api = {
     async getMyClinic(): Promise<ClinicInfo | null> {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        if (!userData?.user) return null;
+
         const { data, error } = await supabase
             .from('clinic_memberships')
             .select('clinic_id, role, clinics(id, name, clinic_code, doctor_name, address, phone)')
+            .eq('user_id', userData.user.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
             .maybeSingle();
 
         if (error) throw error;
