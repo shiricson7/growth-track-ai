@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Save, Calendar, Activity, X } from 'lucide-react';
 import { Patient } from '../types';

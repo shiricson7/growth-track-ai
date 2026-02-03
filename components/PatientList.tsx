@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Patient } from '../types';
 import { User, Calendar, ChevronRight, Search, Activity, UserPlus } from 'lucide-react';
@@ -62,7 +64,7 @@ const PatientList: React.FC<PatientListProps> = ({ patients, onSelectPatient, on
         <div className="space-y-6 animate-in fade-in duration-500">
 
             {/* List Header / Search */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-soft border border-slate-200">
                 <div className="flex items-center gap-2">
                     <h2 className="text-xl font-bold text-slate-800">환자 리스트</h2>
                     <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">{patients.length}명</span>
@@ -86,7 +88,7 @@ const PatientList: React.FC<PatientListProps> = ({ patients, onSelectPatient, on
             </div>
 
             {/* Patient Grid/List */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-soft border border-slate-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-slate-50 text-slate-500 uppercase text-xs">

@@ -7,6 +7,7 @@ export interface LabResult {
   referenceRange: string;
   status: 'normal' | 'high' | 'low';
   patient_id?: string; // Added for DB compatibility
+  isManual?: boolean; // OCR manual entry flag
 }
 
 export interface GrowthPoint {

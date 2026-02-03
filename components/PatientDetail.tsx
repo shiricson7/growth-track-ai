@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Activity, TrendingUp, AlertCircle, Brain, Calendar, Syringe, ClipboardList, Ruler, Settings } from 'lucide-react';
@@ -5,7 +7,16 @@ import { Patient, GrowthPoint, LabResult, Measurement } from '../types';
 
 import { growthStandards } from '../src/utils/growthStandards';
 import { calculateIGF1Percentile, getAgeYearsAtDate, isIGF1Parameter, isLikelyNgMlUnit } from '../src/utils/igf1Roche';
+import { aiEnabled } from '../src/services/ai';
 import BoneAgeHistory from './BoneAgeHistory';
+
+const CHART_COLORS = {
+  patient: '#2f4b76',
+  predicted: '#1aa79c',
+  median: '#64748b',
+  band: '#cbd5e1',
+  bone: '#dc2626',
+};
 
 interface PatientDetailProps {
   patient: Patient;
@@ -63,6 +74,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   React.useEffect(() => {
     growthStandards.load();
   }, []);
+
+  const aiAvailable = aiEnabled;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -132,12 +145,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </h2>
             <div className="flex items-center gap-2 text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-100">
               <Brain size={14} />
-              <span>AI 예측 모델 적용됨</span>
+              <span>{aiAvailable ? 'AI 예측 모델 적용됨' : 'AI 비활성 (API 키 필요)'}</span>
             </div>
           </div>
 
-          <div className="h-[350px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[350px] min-h-[350px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={300}>
               <LineChart data={growthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis
@@ -173,11 +186,51 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   labelFormatter={(label) => `${label}세`}
                 />
                 <Legend />
-                <Line type="monotone" dataKey="percentile50" stroke="#059669" strokeDasharray="5 5" name="평균 (50th %)" dot={false} strokeWidth={2} connectNulls />
-                <Line type="monotone" dataKey="percentile97" stroke="#34d399" strokeDasharray="3 3" name="97th %" dot={false} connectNulls />
-                <Line type="monotone" dataKey="percentile3" stroke="#34d399" strokeDasharray="3 3" name="3rd %" dot={false} connectNulls />
-                <Line type="monotone" dataKey="height" stroke="#2563eb" strokeWidth={3} name="환자 (Patient)" activeDot={{ r: 6 }} connectNulls />
-                <Line type="monotone" dataKey="predicted" stroke="#7c3aed" strokeWidth={2} strokeDasharray="5 5" name="AI 예측 (Predicted)" />
+                <Line
+                  type="monotone"
+                  dataKey="percentile50"
+                  stroke={CHART_COLORS.median}
+                  strokeDasharray="5 5"
+                  name="평균 (50th %)"
+                  dot={false}
+                  strokeWidth={2}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="percentile97"
+                  stroke={CHART_COLORS.band}
+                  strokeDasharray="3 3"
+                  name="97th %"
+                  dot={false}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="percentile3"
+                  stroke={CHART_COLORS.band}
+                  strokeDasharray="3 3"
+                  name="3rd %"
+                  dot={false}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="height"
+                  stroke={CHART_COLORS.patient}
+                  strokeWidth={3}
+                  name="환자 (Patient)"
+                  activeDot={{ r: 6 }}
+                  connectNulls
+                />
+                <Line
+                  type="monotone"
+                  dataKey="predicted"
+                  stroke={CHART_COLORS.predicted}
+                  strokeWidth={2.5}
+                  strokeDasharray="5 5"
+                  name="AI 예측 (Predicted)"
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -265,9 +318,14 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               <Activity className="text-red-500" /> 골연령 성숙도 (Bone Age Maturity)
             </h2>
           </div>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={growthData.filter(d => d.boneAge || d.percentile50)} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+          <div className="h-[250px] min-h-[250px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={200}>
+              <LineChart
+                data={growthData.filter(
+                  (d) => (d as any).boneAge || (d as any).percentile50
+                )}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="age" type="number" domain={['dataMin', 'dataMax']} unit="세" stroke="#64748b" />
                 <YAxis dataKey="boneAge" domain={['auto', 'auto']} unit="세" stroke="#64748b" />
@@ -282,8 +340,23 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                 />
                 <Legend />
                 {/* Reference Line y=x */}
-                <Line type="monotone" dataKey="age" stroke="#cbd5e1" strokeDasharray="3 3" name="표준 성장 (1:1)" dot={false} />
-                <Line type="monotone" dataKey="boneAge" stroke="#ef4444" strokeWidth={3} name="환자 골연령" activeDot={{ r: 6 }} connectNulls />
+                <Line
+                  type="monotone"
+                  dataKey="age"
+                  stroke={CHART_COLORS.band}
+                  strokeDasharray="3 3"
+                  name="표준 성장 (1:1)"
+                  dot={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="boneAge"
+                  stroke={CHART_COLORS.bone}
+                  strokeWidth={3}
+                  name="환자 골연령"
+                  activeDot={{ r: 6 }}
+                  connectNulls
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -328,14 +401,14 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           <div className="bg-gradient-to-br from-indigo-50 to-white rounded-xl shadow-sm border border-indigo-100 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2 text-indigo-900">
-                <Brain className="text-indigo-600" /> AI 임상 분석 (Gemini)
+                <Brain className="text-indigo-600" /> AI 임상 분석 (GPT-5.2)
               </h2>
               <button
                 onClick={onAnalyzeGrowth}
-                disabled={isAnalyzing}
+                disabled={isAnalyzing || !aiAvailable}
                 className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-md hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
               >
-                {isAnalyzing ? '분석 중...' : '분석 실행'}
+                {!aiAvailable ? 'AI 비활성' : isAnalyzing ? '분석 중...' : '분석 실행'}
               </button>
             </div>
 
@@ -350,7 +423,9 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               </ul>
             ) : (
               <div className="text-sm text-indigo-400 text-center py-4">
-                데이터 기반 AI 분석을 실행하려면 버튼을 클릭하세요.
+                {aiAvailable
+                  ? '데이터 기반 AI 분석을 실행하려면 버튼을 클릭하세요.'
+                  : 'AI 기능이 비활성화되어 있습니다. API 키 설정 후 사용 가능합니다.'}
               </div>
             )}
           </div>
@@ -475,9 +550,9 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </table>
           </div>
         ) : (
-          <div className="p-6 h-[300px] w-full">
+          <div className="p-6 h-[300px] min-h-[300px] w-full min-w-0">
             {trendData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={320} minHeight={200}>
                 <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                   <XAxis dataKey="date" stroke="#64748b" />

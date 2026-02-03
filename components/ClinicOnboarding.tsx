@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Building2, KeyRound } from 'lucide-react';
 import { api } from '../src/services/api';
@@ -44,8 +46,8 @@ const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ onComplete, initial
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-xl bg-white/90 backdrop-blur rounded-2xl shadow-soft border border-slate-200/80 p-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">클리닉 설정</h1>

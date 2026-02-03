@@ -1,7 +1,9 @@
+'use client';
+
 import React, { useState, useCallback } from 'react';
 import { Upload, CheckCircle, ScanLine, Edit2, Plus } from 'lucide-react';
 import { LabResult } from '../types';
-import { aiService } from '../src/services/ai';
+import { aiEnabled, aiService } from '../src/services/ai';
 
 interface LabOCRProps {
   onResultsProcessed: (results: LabResult[]) => void;
@@ -13,6 +15,7 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
   const [scannedData, setScannedData] = useState<LabResult[]>([]);
 
   const [collectionDate, setCollectionDate] = useState(new Date().toISOString().split('T')[0]);
+  const aiAvailable = aiEnabled;
 
   const normalizeDate = (value?: string | null) => {
     if (!value) return null;
@@ -35,8 +38,12 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
     return null;
   };
 
-  // Actual OCR processing using Gemini
+  // Actual OCR processing using OpenAI API
   const handleFiles = async (files: FileList | null) => {
+    if (!aiAvailable) {
+      alert('AI 기능이 비활성화되어 있습니다. API 키 설정 후 이용 가능합니다.');
+      return;
+    }
     if (files && files[0]) {
       setStatus('scanning');
       try {
@@ -141,7 +148,9 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
 
       {status === 'idle' && (
         <div
-          className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'}`}
+          className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all ${
+            dragActive ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-400 hover:bg-slate-50'
+          } ${!aiAvailable ? 'opacity-60 cursor-not-allowed' : ''}`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
@@ -151,6 +160,7 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
             type="file"
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             onChange={handleChange}
+            disabled={!aiAvailable}
             accept="image/*,.pdf"
           />
           <div className="flex flex-col items-center gap-4">
@@ -160,6 +170,11 @@ const LabOCR: React.FC<LabOCRProps> = ({ onResultsProcessed }) => {
             <div>
               <p className="text-lg font-medium text-slate-900">파일을 드래그하거나 클릭하여 업로드</p>
               <p className="text-sm text-slate-500 mt-1">지원 형식: JPG, PNG, PDF (최대 10MB)</p>
+              {!aiAvailable && (
+                <p className="text-sm text-amber-600 mt-2">
+                  AI 기능이 비활성화되어 있습니다. API 키 설정 후 이용 가능합니다.
+                </p>
+              )}
             </div>
           </div>
         </div>

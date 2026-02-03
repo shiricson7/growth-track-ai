@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Save, Building, Phone, MapPin, User, Settings as SettingsIcon } from 'lucide-react';
 
@@ -26,7 +28,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div className="bg-white p-6 rounded-2xl shadow-soft border border-slate-200">
                 <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-6">
                     <SettingsIcon className="text-slate-400" />
                     환경 설정 (Clinic Settings)

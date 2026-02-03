@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Syringe, Plus, Save, Trash2, ArrowLeft } from 'lucide-react';
 import { Patient, Medication } from '../types';

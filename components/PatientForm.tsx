@@ -1,20 +1,30 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Patient } from '../types';
 import { Save, User, Calendar, Activity, Users, Hash, FileInput } from 'lucide-react';
 
 interface PatientFormProps {
   initialData?: Patient;
+  initialHeight?: number;
+  initialWeight?: number;
   onSave: (patient: Patient) => void;
   onCancel: () => void;
 }
 
-const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel }) => {
-  const [formData, setFormData] = useState<Partial<Patient>>(initialData || {
-    name: '',
-    dob: '',
-    gender: 'Male',
-    height: 0,
-    weight: 0,
+type PatientFormState = Partial<Patient> & {
+  height?: number;
+  weight?: number;
+};
+
+const PatientForm: React.FC<PatientFormProps> = ({ initialData, initialHeight, initialWeight, onSave, onCancel }) => {
+  const [formData, setFormData] = useState<PatientFormState>({
+    ...(initialData || {}),
+    name: initialData?.name || '',
+    dob: initialData?.dob || '',
+    gender: initialData?.gender || 'Male',
+    height: initialHeight ?? (initialData as any)?.height ?? 0,
+    weight: initialWeight ?? (initialData as any)?.weight ?? 0,
     boneAge: initialData?.boneAge || 0, // Default to 0 as it's removed from registration
     tannerStage: initialData?.tannerStage || '',
     targetHeight: initialData?.targetHeight || 0,

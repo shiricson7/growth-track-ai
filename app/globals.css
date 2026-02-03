@@ -1,3 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f7fafc 0%, #eef2f7 45%, #f8fafc 100%);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(26, 167, 156, 0.12), transparent 45%),
+    radial-gradient(circle at 88% 10%, rgba(76, 116, 173, 0.16), transparent 48%),
+    radial-gradient(circle at 70% 85%, rgba(26, 167, 156, 0.1), transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-serif);
+  letter-spacing: -0.015em;
+}
+
 @media print {
   @page {
     size: A4;
@@ -15,6 +49,10 @@
     background: #fff !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  body::before {
+    display: none !important;
   }
 
   * {
