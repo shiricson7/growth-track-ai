@@ -149,7 +149,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </div>
           </div>
 
-          <div className="h-[350px] w-full">
+          <div className="h-[350px] min-h-[350px] w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={growthData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
@@ -318,7 +318,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               <Activity className="text-red-500" /> 골연령 성숙도 (Bone Age Maturity)
             </h2>
           </div>
-          <div className="h-[250px] w-full">
+          <div className="h-[250px] min-h-[250px] w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={growthData.filter(
@@ -550,7 +550,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </table>
           </div>
         ) : (
-          <div className="p-6 h-[300px] w-full">
+          <div className="p-6 h-[300px] min-h-[300px] w-full min-w-0">
             {trendData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={trendData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>

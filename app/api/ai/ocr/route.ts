@@ -62,6 +62,36 @@ Do not include markdown formatting or extra text.
           ],
         },
       ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'lab_ocr',
+          strict: true,
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              collectionDate: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+              results: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  additionalProperties: false,
+                  properties: {
+                    parameter: { type: 'string' },
+                    value: { type: 'number' },
+                    unit: { type: 'string' },
+                    referenceRange: { type: 'string' },
+                    status: { type: 'string' },
+                  },
+                  required: ['parameter', 'value', 'unit', 'referenceRange', 'status'],
+                },
+              },
+            },
+            required: ['collectionDate', 'results'],
+          },
+        },
+      },
       temperature: 0.1,
       max_output_tokens: 1200,
     };

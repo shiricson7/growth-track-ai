@@ -74,6 +74,21 @@ Rules:
         { role: 'system', content: [{ type: 'input_text', text: system }] },
         { role: 'user', content: [{ type: 'input_text', text: user }] },
       ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'growth_report',
+          strict: true,
+          schema: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              markdownReport: { type: 'string' },
+            },
+            required: ['markdownReport'],
+          },
+        },
+      },
       temperature: 0.2,
       max_output_tokens: 1800,
     };

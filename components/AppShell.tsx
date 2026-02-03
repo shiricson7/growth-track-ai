@@ -440,7 +440,7 @@ function AppShell() {
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1 flex flex-col overflow-hidden app-main">
+          <main className="flex-1 min-w-0 flex flex-col overflow-hidden app-main">
             {/* Header with Search */}
             <header className="bg-white/90 backdrop-blur border-b border-slate-200 h-16 flex items-center justify-between px-6 app-header">
               <button className="md:hidden text-slate-600">
