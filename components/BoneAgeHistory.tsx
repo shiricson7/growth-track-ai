@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { X, Calendar, Activity, Edit2, Save, Trash2 } from 'lucide-react';
 import { Measurement, Patient } from '../types';

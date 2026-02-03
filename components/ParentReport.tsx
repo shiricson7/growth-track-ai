@@ -1,8 +1,10 @@
+'use client';
+
 import React from 'react';
 import { Patient, GrowthPoint, LabResult } from '../types';
 import { Printer, Download, Star } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
-import { aiService } from '../src/services/ai';
+import { aiEnabled, aiService } from '../src/services/ai';
 import { ClinicSettings } from './Settings';
 
 const splitReportContent = (content: string) => {
@@ -47,6 +49,12 @@ const buildGrowthPolyline = (points: GrowthPoint[]) => {
   return { width, height, polyline, dots };
 };
 
+const REPORT_COLORS = {
+  patient: '#2f4b76',
+  predicted: '#1aa79c',
+  median: '#94a3b8',
+};
+
 const RecentGrowthSummary: React.FC<{ points: GrowthPoint[]; velocity: number | null }> = ({ points, velocity }) => {
   const recentPoints = points.length > 5 ? points.slice(-5) : points;
   const chart = buildGrowthPolyline(recentPoints);
@@ -71,12 +79,12 @@ const RecentGrowthSummary: React.FC<{ points: GrowthPoint[]; velocity: number | 
               <rect x="0" y="0" width={chart.width} height={chart.height} fill="#f8fafc" rx="8" />
               <polyline
                 fill="none"
-                stroke="#2563eb"
+                stroke={REPORT_COLORS.patient}
                 strokeWidth="2.5"
                 points={chart.polyline}
               />
               {chart.dots.map((dot, idx) => (
-                <circle key={idx} cx={dot.cx} cy={dot.cy} r="3" fill="#1d4ed8" />
+                <circle key={idx} cx={dot.cx} cy={dot.cy} r="3" fill={REPORT_COLORS.patient} />
               ))}
             </svg>
           </div>
@@ -200,6 +208,11 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
     const generate = async () => {
       setLoading(true);
       try {
+        if (!aiEnabled) {
+          setReportContent('# AI 비활성화\n\n관리자에게 API 키 설정을 요청해주세요.');
+          setLoading(false);
+          return;
+        }
         const report = await aiService.generateParentReport(patient, labResults, patient.medications);
         setReportContent(report);
       } catch (e) {
@@ -219,6 +232,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
 
   React.useEffect(() => {
     if (Number.isFinite(reportPredictedHeight)) return;
+    if (!aiEnabled) return;
     const fetchPredictedHeight = async () => {
       try {
         const result = await aiService.analyzeGrowth(patient, growthData, labResults);
@@ -302,10 +316,31 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="age" unit="세" stroke="#94a3b8" />
                   <YAxis domain={['auto', 'auto']} unit="cm" stroke="#94a3b8" />
-                  <Line type="monotone" dataKey="height" stroke="#2563eb" strokeWidth={4} dot={{ r: 6 }} name="현재 성장" />
-                  <Line type="monotone" dataKey="percentile50" stroke="#cbd5e1" strokeDasharray="5 5" strokeWidth={2} name="또래 평균" />
+                  <Line
+                    type="monotone"
+                    dataKey="height"
+                    stroke={REPORT_COLORS.patient}
+                    strokeWidth={4}
+                    dot={{ r: 6 }}
+                    name="현재 성장"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="percentile50"
+                    stroke={REPORT_COLORS.median}
+                    strokeDasharray="5 5"
+                    strokeWidth={2}
+                    name="또래 평균"
+                  />
                   {patient.predictedAdultHeight > 0 && (
-                    <Line type="monotone" dataKey="predicted" stroke="#7c3aed" strokeDasharray="3 3" strokeWidth={2} name="AI 예측" />
+                    <Line
+                      type="monotone"
+                      dataKey="predicted"
+                      stroke={REPORT_COLORS.predicted}
+                      strokeDasharray="3 3"
+                      strokeWidth={2}
+                      name="AI 예측"
+                    />
                   )}
                 </LineChart>
               </ResponsiveContainer>

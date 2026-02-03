@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Patient } from '../types';
 import { Save, User, Calendar, Activity, Users, Hash, FileInput } from 'lucide-react';
