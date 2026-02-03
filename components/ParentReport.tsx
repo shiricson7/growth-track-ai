@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import { aiEnabled, aiService } from '../src/services/ai';
 import { growthStandards } from '../src/utils/growthStandards';
 import { bmiStandards } from '../src/utils/bmiStandards';
+import { weightStandards } from '../src/utils/weightStandards';
 import { ClinicSettings } from './Settings';
 import { api } from '../src/services/api';
 
@@ -189,6 +190,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   const [reportPredictedHeight, setReportPredictedHeight] = React.useState<number | undefined>(aiPredictedHeight);
   const [standardsReady, setStandardsReady] = React.useState(false);
   const [bmiStandardsReady, setBmiStandardsReady] = React.useState(false);
+  const [weightStandardsReady, setWeightStandardsReady] = React.useState(false);
   const { summaryContent, restContent } = React.useMemo(() => splitReportContent(reportContent), [reportContent]);
   const growthSeries = React.useMemo(() => {
     return (growthData || [])
@@ -212,6 +214,10 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
     if (!standardsReady || !latestAge || !latestHeight) return null;
     return growthStandards.calculatePercentile(patient.gender, latestAge, latestHeight);
   }, [standardsReady, latestAge, latestHeight, patient.gender]);
+  const weightPercentile = React.useMemo(() => {
+    if (!weightStandardsReady || !latestAge || !latestWeight) return null;
+    return weightStandards.calculatePercentile(patient.gender, latestAge, latestWeight);
+  }, [weightStandardsReady, latestAge, latestWeight, patient.gender]);
   const bmiPercentile = React.useMemo(() => {
     if (!bmiStandardsReady || !latestAge || !bmiValue) return null;
     return bmiStandards.calculatePercentile(patient.gender, latestAge, bmiValue);
@@ -236,6 +242,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   React.useEffect(() => {
     growthStandards.load().then(() => setStandardsReady(true));
     bmiStandards.load().then(() => setBmiStandardsReady(true));
+    weightStandards.load().then(() => setWeightStandardsReady(true));
   }, []);
 
   React.useEffect(() => {
@@ -478,6 +485,11 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                     </span>
                     <span className="text-sm text-slate-500">kg</span>
                   </div>
+                  {weightPercentile !== null && (
+                    <span className="inline-flex mt-2 items-center rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-1 text-xs font-semibold">
+                      체중 백분위 {weightPercentile.toFixed(1)}%
+                    </span>
+                  )}
                 </div>
                 <div className="border border-blue-100 rounded-xl p-4 bg-blue-50">
                   <div className="text-xs text-blue-700 mb-1 font-semibold">BMI 백분위</div>
@@ -567,6 +579,9 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
               <div className="border border-slate-100 rounded-lg p-3 bg-slate-50">
                 <div className="text-slate-500">현재 체중</div>
                 <div className="font-bold text-slate-900">{latestWeight ? latestWeight.toFixed(1) : '-'} kg</div>
+                {weightPercentile !== null && (
+                  <div className="text-emerald-700 font-semibold mt-1">체중 백분위 {weightPercentile.toFixed(1)}%</div>
+                )}
               </div>
               <div className="border border-blue-100 rounded-lg p-3 bg-blue-50">
                 <div className="text-blue-700 font-semibold">BMI 백분위</div>
