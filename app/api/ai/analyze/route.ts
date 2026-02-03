@@ -58,6 +58,7 @@ Format the output as a valid JSON object with this structure:
 }
 Do not include markdown code blocks. Just the raw JSON.
 IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN language.
+Keep it concise: analysis array should have 4-6 items, each under 200 Korean characters, no line breaks.
 `;
 
     const payload = {
@@ -87,11 +88,23 @@ IMPORTANT: All textual analysis, summary, and recommendations MUST be in KOREAN 
           },
         },
       },
-      temperature: 0.2,
-      max_output_tokens: 1200,
+      temperature: 0.1,
+      max_output_tokens: 2200,
     };
 
     const result = await callOpenAI(payload);
+    const incompleteOutput = Array.isArray(result?.output)
+      ? result.output.some((item: any) => item?.status === 'incomplete')
+      : false;
+    if (result?.status === 'incomplete' || incompleteOutput) {
+      return NextResponse.json(
+        {
+          analysis: ['AI 응답이 길어서 중단되었습니다. 다시 시도해주세요.'],
+          predictedHeight: null,
+        },
+        { status: 200 }
+      );
+    }
     const json = extractOutputJson(result);
     const data = json ?? safeJsonParse(extractOutputText(result));
     if (!data) {
