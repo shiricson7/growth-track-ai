@@ -30,6 +30,9 @@ interface PatientDetailProps {
   onRefresh: () => void; // Added for refreshing data after edits
   onManageMedication?: () => void; // Added
   onEditPatient?: () => void;
+  intakeLink?: { url: string; expiresAt: string } | null;
+  intakeLinkLoading?: boolean;
+  onCreateIntakeLink?: () => void;
 }
 
 const PatientDetail: React.FC<PatientDetailProps> = ({
@@ -43,7 +46,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   isAnalyzing,
   onRefresh,
   onManageMedication,
-  onEditPatient
+  onEditPatient,
+  intakeLink,
+  intakeLinkLoading,
+  onCreateIntakeLink
 }) => {
   /* Lab History State */
   const [labViewMode, setLabViewMode] = React.useState<'list' | 'trend'>('list');
@@ -133,6 +139,50 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Intake Link */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <ClipboardList size={18} className="text-blue-600" />
+              사전문진 링크
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">보호자에게 공유할 문진 링크를 생성합니다.</p>
+          </div>
+          <button
+            onClick={onCreateIntakeLink}
+            disabled={!onCreateIntakeLink || intakeLinkLoading}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-60"
+          >
+            {intakeLinkLoading ? '생성 중...' : '문진 링크 생성'}
+          </button>
+        </div>
+
+        {intakeLink && (
+          <div className="mt-4 flex flex-col gap-2">
+            <div className="flex flex-col md:flex-row gap-2">
+              <input
+                value={intakeLink.url}
+                readOnly
+                className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (navigator?.clipboard?.writeText) {
+                    navigator.clipboard.writeText(intakeLink.url);
+                  }
+                }}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+              >
+                복사
+              </button>
+            </div>
+            <p className="text-xs text-slate-400">만료: {new Date(intakeLink.expiresAt).toLocaleString('ko-KR')}</p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

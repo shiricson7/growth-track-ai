@@ -90,3 +90,32 @@ export interface Patient {
   heightMother?: number; // cm
   medications: Medication[];
 }
+
+export interface IntakeToken {
+  id: string;
+  token: string;
+  patient_id: string;
+  created_at: string;
+  expires_at: string;
+  status: 'active' | 'used' | 'expired';
+  used_at?: string | null;
+}
+
+export interface IntakeForm {
+  id: string;
+  patient_id: string;
+  created_at: string;
+  submitted_at: string;
+  status: 'submitted' | 'reviewed';
+  token?: string | null;
+}
+
+export interface IntakeAnswer {
+  id: string;
+  form_id: string;
+  created_at: string;
+  version: string;
+  answers_json: Record<string, any>;
+  flags_json?: Record<string, boolean> | null;
+  summary_json?: string[] | null;
+}

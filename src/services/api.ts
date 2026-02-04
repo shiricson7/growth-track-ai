@@ -1,5 +1,16 @@
 import { supabase } from '../lib/supabase';
-import { Patient, Measurement, LabResult, ClinicInfo, AiReport, AiReportKind } from '../../types';
+import { Patient, Measurement, LabResult, ClinicInfo, AiReport, AiReportKind, IntakeToken } from '../../types';
+
+const generateToken = () => {
+    const cryptoObj = typeof globalThis !== 'undefined' ? (globalThis as any).crypto : null;
+    if (cryptoObj?.randomUUID) return cryptoObj.randomUUID();
+    if (cryptoObj?.getRandomValues) {
+        const buffer = new Uint8Array(16);
+        cryptoObj.getRandomValues(buffer);
+        return Array.from(buffer).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+};
 
 export const api = {
     async getMyClinic(): Promise<ClinicInfo | null> {
@@ -497,5 +508,32 @@ export const api = {
             updatedAt: data.updated_at,
             sourceModel: data.source_model
         } as AiReport;
+    },
+
+    // --- Intake Tokens ---
+    async createIntakeToken(patientId: string): Promise<IntakeToken> {
+        const token = generateToken();
+        const { data, error } = await supabase
+            .from('intake_tokens')
+            .insert([{ token, patient_id: patientId }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as IntakeToken;
+    },
+
+    async getLatestIntakeToken(patientId: string): Promise<IntakeToken | null> {
+        const { data, error } = await supabase
+            .from('intake_tokens')
+            .select('*')
+            .eq('patient_id', patientId)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error) throw error;
+        return data as IntakeToken | null;
     }
 };

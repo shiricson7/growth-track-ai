@@ -15,6 +15,7 @@ import {
   ChevronLeft,
   Ruler,
   Activity,
+  ClipboardList,
 } from 'lucide-react';
 import PatientDetail from './PatientDetail';
 import PatientList from './PatientList';
@@ -44,7 +45,7 @@ type View =
   | 'measurement-input'
   | 'medication-setup';
 
-function AppShell() {
+function AppShell({ initialPatientId }: { initialPatientId?: string }) {
   /* Supabase & AI Integration */
   const [session, setSession] = useState<Session | null>(null);
   const [clinic, setClinic] = useState<ClinicInfo | null>(null);
@@ -57,6 +58,9 @@ function AppShell() {
   const [growthData, setGrowthData] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>(undefined);
+  const [intakeLink, setIntakeLink] = useState<{ url: string; expiresAt: string } | null>(null);
+  const [intakeLinkLoading, setIntakeLinkLoading] = useState(false);
+  const [pendingPatientId, setPendingPatientId] = useState<string | undefined>(initialPatientId);
 
   // Settings State
   const [clinicSettings, setClinicSettings] = useState<ClinicSettings>({
@@ -116,6 +120,10 @@ function AppShell() {
     };
   }, []);
 
+  useEffect(() => {
+    setPendingPatientId(initialPatientId);
+  }, [initialPatientId]);
+
   const loadClinic = async () => {
     if (!session) {
       setClinic(null);
@@ -166,6 +174,19 @@ function AppShell() {
     loadClinic();
   }, [session]);
 
+  useEffect(() => {
+    if (!pendingPatientId) return;
+    if (!session || clinicLoading || !clinic) return;
+
+    const jumpToPatient = async () => {
+      await loadPatientData(pendingPatientId);
+      setCurrentView('patient-detail');
+      setPendingPatientId(undefined);
+    };
+
+    jumpToPatient();
+  }, [pendingPatientId, session, clinicLoading, clinic]);
+
   const loadData = async (clinicId: string) => {
     try {
       const patientsList = await api.getPatients(clinicId);
@@ -177,6 +198,7 @@ function AppShell() {
 
   const loadPatientData = async (patientId: string) => {
     try {
+      setIntakeLink(null);
       setAiAnalysis(null);
       setAiPredictedHeight(undefined);
       const [labs, meas, meds, patientFromDb] = await Promise.all([
@@ -195,6 +217,18 @@ function AppShell() {
       setLabResults(labs);
       setMeasurements(meas);
       setCurrentPatient(patient);
+
+      try {
+        const latestToken = await api.getLatestIntakeToken(patient.id);
+        if (latestToken?.token) {
+          setIntakeLink({
+            url: `${window.location.origin}/intake/${latestToken.token}`,
+            expiresAt: latestToken.expires_at,
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load latest intake token', e);
+      }
       setPatients((prev) => prev.map((p) => (p.id === patient.id ? { ...p, ...patient } : p)));
 
       // 1. Process Patient Measurements
@@ -251,6 +285,24 @@ function AppShell() {
     setCurrentPatient(patient);
     await loadPatientData(patient.id);
     setCurrentView('patient-detail');
+  };
+
+  const handleCreateIntakeLink = async () => {
+    if (!currentPatient) return;
+    setIntakeLinkLoading(true);
+    try {
+      const token = await api.createIntakeToken(currentPatient.id);
+      setIntakeLink({
+        url: `${window.location.origin}/intake/${token.token}`,
+        expiresAt: token.expires_at,
+      });
+      alert('문진 링크가 생성되었습니다.');
+    } catch (e) {
+      console.error('Failed to create intake link', e);
+      alert('문진 링크 생성에 실패했습니다.');
+    } finally {
+      setIntakeLinkLoading(false);
+    }
   };
 
   const handleAIAnalysis = async () => {
@@ -454,6 +506,13 @@ function AppShell() {
               <SidebarItem view="bone-age" icon={Ruler} label="골연령 판독" />
               <SidebarItem view="ocr" icon={ScanLine} label="결과지 스캔 (OCR)" />
               <SidebarItem view="report" icon={FileText} label="리포트 생성" />
+              <button
+                onClick={() => (window.location.href = '/intakes')}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-600 hover:bg-slate-100"
+              >
+                <ClipboardList size={20} />
+                <span className="font-medium tracking-tight">문진 대시보드</span>
+              </button>
             </nav>
 
             <div className="p-4 border-t border-slate-100">
@@ -551,6 +610,9 @@ function AppShell() {
                     onRefresh={() => currentPatient && loadPatientData(currentPatient.id)}
                     onManageMedication={() => setCurrentView('medication-setup')}
                     onEditPatient={() => handleEditPatient(currentPatient)}
+                    intakeLink={intakeLink}
+                    intakeLinkLoading={intakeLinkLoading}
+                    onCreateIntakeLink={handleCreateIntakeLink}
                   />
                 </>
               )}
