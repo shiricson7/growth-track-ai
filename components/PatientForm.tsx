@@ -124,7 +124,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
               <input
                 type="text"
                 required
-                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 px-3 py-2"
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                 placeholder="예: 김민준"
@@ -135,7 +135,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
               <input
                 type="text"
                 required
-                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 font-mono"
+                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 font-mono px-3 py-2"
                 value={ssnInput}
                 onChange={handleSSNChange}
                 placeholder="YYMMDD-1234567"
@@ -149,7 +149,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
                 <input
                   type="date"
                   disabled
-                  className="w-full rounded-lg border-slate-200 bg-slate-100 text-slate-600 cursor-not-allowed"
+                  className="w-full rounded-lg border-slate-200 bg-slate-100 text-slate-600 cursor-not-allowed px-3 py-2"
                   value={formData.dob}
                 />
               </div>
@@ -178,7 +178,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
                 <input
                   type="text"
                   required
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pl-10"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pl-10 pr-3 py-2"
                   value={formData.chartNumber || ''}
                   onChange={e => setFormData({ ...formData, chartNumber: e.target.value })}
                   placeholder="병원 차트 번호 입력"
@@ -192,7 +192,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
                 <input
                   type="date"
                   required
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pl-10"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pl-10 pr-3 py-2"
                   value={formData.visitDate || ''}
                   onChange={e => setFormData({ ...formData, visitDate: e.target.value })}
                 />
@@ -216,7 +216,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
                   type="number"
                   step="0.1"
                   required
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12 pl-3 py-2"
                   value={formData.height || ''}
                   onChange={e => setFormData({ ...formData, height: parseFloat(e.target.value) })}
                   placeholder="0.0"
@@ -231,7 +231,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
                   type="number"
                   step="0.1"
                   required
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12 pl-3 py-2"
                   value={formData.weight || ''}
                   onChange={e => setFormData({ ...formData, weight: parseFloat(e.target.value) })}
                   placeholder="0.0"
@@ -245,7 +245,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
                 <input
                   type="number"
                   step="0.1"
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12 pl-3 py-2"
                   value={formData.boneAge || ''}
                   onChange={e => setFormData({ ...formData, boneAge: parseFloat(e.target.value) })}
                   placeholder="0.0"
@@ -257,7 +257,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">현재 Tanner Stage</label>
               <select
-                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 px-3 py-2"
                 value={formData.tannerStage || ''}
                 onChange={e => setFormData({ ...formData, tannerStage: e.target.value })}
               >
@@ -284,7 +284,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
               <div className="relative">
                 <input
                   type="number"
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12 pl-3 py-2"
                   value={parentHeight.father}
                   onChange={e => setParentHeight({ ...parentHeight, father: parseFloat(e.target.value) })}
                 />
@@ -296,7 +296,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ initialData, onSave, onCancel
               <div className="relative">
                 <input
                   type="number"
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pr-12 pl-3 py-2"
                   value={parentHeight.mother}
                   onChange={e => setParentHeight({ ...parentHeight, mother: parseFloat(e.target.value) })}
                 />

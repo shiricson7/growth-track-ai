@@ -43,7 +43,7 @@ const Auth: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-        <h1 className="text-2xl font-bold text-slate-900">GrowthTrack AI</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Growthclinic.ai</h1>
         <p className="text-slate-500 text-sm mt-1">계속하려면 로그인하세요.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
