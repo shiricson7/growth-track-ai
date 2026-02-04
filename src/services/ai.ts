@@ -44,11 +44,12 @@ export const aiService = {
     });
   },
 
-  async generateParentReport(patient: any, recentLabs: any[], meds: any[]) {
+  async generateParentReport(patient: any, recentLabs: any[], meds: any[], reportContext?: any) {
     const data = await requestAI<ParentReportResponse>('/api/ai/report', {
       patient,
       recentLabs,
       meds,
+      reportContext,
     });
     return data.markdownReport;
   },

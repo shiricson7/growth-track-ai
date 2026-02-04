@@ -191,12 +191,31 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
   const [standardsReady, setStandardsReady] = React.useState(false);
   const [bmiStandardsReady, setBmiStandardsReady] = React.useState(false);
   const [weightStandardsReady, setWeightStandardsReady] = React.useState(false);
+  const predictedHeightValue = React.useMemo(() => {
+    const candidate = Number.isFinite(reportPredictedHeight)
+      ? reportPredictedHeight
+      : patient.predictedAdultHeight;
+    if (!Number.isFinite(candidate) || (candidate as number) <= 0) return null;
+    return candidate as number;
+  }, [reportPredictedHeight, patient.predictedAdultHeight]);
   const { summaryContent, restContent } = React.useMemo(() => splitReportContent(reportContent), [reportContent]);
   const growthSeries = React.useMemo(() => {
     return (growthData || [])
       .filter((p) => Number.isFinite(p.age) && Number.isFinite(p.height))
       .sort((a, b) => a.age - b.age);
   }, [growthData]);
+  const patientMeasurements = React.useMemo(() => {
+    return (growthData || []).filter((p: any) => {
+      if (!(p as any).isPatient) return false;
+      const heightOk = typeof (p as any).height === 'number' && (p as any).height > 0;
+      const weightOk = typeof (p as any).weight === 'number' && (p as any).weight > 0;
+      return heightOk || weightOk;
+    });
+  }, [growthData]);
+  const patientHeightMeasurements = React.useMemo(() => {
+    return patientMeasurements.filter((p: any) => typeof (p as any).height === 'number' && (p as any).height > 0);
+  }, [patientMeasurements]);
+  const isFirstVisit = patientMeasurements.length <= 1;
   const latestMeasurement = React.useMemo(() => {
     const patientPoints = (growthData || []).filter((p: any) => (p as any).isPatient && ((p as any).height || (p as any).weight));
     if (patientPoints.length === 0) return null;
@@ -232,6 +251,41 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
     if (ageDiff <= 0) return null;
     return (last.height - first.height) / ageDiff;
   }, [growthSeries]);
+  const patientGrowthVelocity = React.useMemo(() => {
+    if (patientHeightMeasurements.length < 2) return null;
+    const sorted = [...patientHeightMeasurements].sort((a: any, b: any) => (a.age ?? 0) - (b.age ?? 0));
+    const windowSize = sorted.length >= 4 ? 4 : Math.min(3, sorted.length);
+    const windowPoints = sorted.slice(-windowSize);
+    const first = windowPoints[0];
+    const last = windowPoints[windowPoints.length - 1];
+    const ageDiff = (last.age ?? 0) - (first.age ?? 0);
+    if (ageDiff <= 0) return null;
+    return (last.height - first.height) / ageDiff;
+  }, [patientHeightMeasurements]);
+  const reportContext = React.useMemo(() => {
+    return {
+      firstVisit: isFirstVisit,
+      currentHeight: latestHeight,
+      currentWeight: latestWeight,
+      bmi: bmiValue,
+      heightPercentile,
+      weightPercentile,
+      bmiPercentile,
+      growthVelocity: patientGrowthVelocity,
+      priorGrowthRecordCount: Math.max(0, patientMeasurements.length - 1),
+      hasPriorGrowthRecords: patientMeasurements.length > 1,
+    };
+  }, [
+    isFirstVisit,
+    latestHeight,
+    latestWeight,
+    bmiValue,
+    heightPercentile,
+    weightPercentile,
+    bmiPercentile,
+    patientGrowthVelocity,
+    patientMeasurements.length,
+  ]);
 
   React.useEffect(() => {
     const handleAfterPrint = () => setIsPrinting(false);
@@ -286,7 +340,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
     }
     setLoading(true);
     try {
-      const report = await aiService.generateParentReport(patient, labResults, patient.medications);
+      const report = await aiService.generateParentReport(patient, labResults, patient.medications, reportContext);
       setReportContent(report);
       setLastUpdated(new Date().toISOString());
       await api.upsertAiReport({
@@ -509,6 +563,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
 
           {/* Footer */}
           <div className="mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm print-section">
+            <p>{'\uC608\uCE21 \uC131\uC778\uD0A4(PAH)'}: {predictedHeightValue ? predictedHeightValue.toFixed(1) : '-'} cm</p>
             <p>{settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}</p>
           </div>
         </div>
@@ -595,6 +650,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         </div>
 
         <div className="print-section mt-8 text-xs text-slate-500 border-t border-slate-200 pt-3">
+          <div>{'\uC608\uCE21 \uC131\uC778\uD0A4(PAH)'}: {predictedHeightValue ? predictedHeightValue.toFixed(1) : '-'} cm</div>
           {settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}
         </div>
       </div>

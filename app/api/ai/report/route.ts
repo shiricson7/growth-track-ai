@@ -16,7 +16,8 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { patient, recentLabs, meds } = body || {};
+    const { patient, recentLabs, meds, reportContext } = body || {};
+    const isFirstVisit = Boolean(reportContext?.firstVisit);
 
     const labsWithIgf1 = (recentLabs || []).map((lab: any) => {
       if (!isIGF1Parameter(lab.parameter)) return lab;
@@ -34,8 +35,99 @@ export async function POST(request: Request) {
       };
     });
 
+    const formatNumber = (value: any, digits = 1, suffix = '') => {
+      if (value === null || value === undefined) return 'N/A';
+      const num = typeof value === 'number' ? value : Number(value);
+      if (!Number.isFinite(num)) return 'N/A';
+      return `${num.toFixed(digits)}${suffix}`;
+    };
+
+    const firstVisitPrompt = `
+당신은 성장클리닉을 운영하는 소아청소년과 내분비 전문의입니다.
+본 리포트는 저신장 또는 조기 사춘기가 의심되어
+처음 성장클리닉에 내원한 소아·청소년 환자의 보호자에게
+현재 상태와 향후 평가 방향을 설명하기 위해 작성됩니다.
+
+아래에 제공되는 초진 정보를 종합 분석하여,
+의학적으로 정확하지만 보호자가 이해하기 쉬운 한글 리포트를 작성하세요.
+
+【입력 정보】
+- 연령, 성별
+- 현재 신장, 체중, BMI
+- 성장 백분위 및 최근 성장속도(cm/년)
+- 과거 성장 기록(있는 경우)
+- 부모 신장 및 가족력
+- Tanner stage
+- 골연령 검사 결과(시행된 경우)
+- 혈액검사 결과(시행된 경우)
+
+【리포트 작성 핵심 원칙】
+- ‘의심 단계’임을 분명히 하되, 질환을 단정하지 말 것
+- 정상 변이 가능성과 추가 평가 필요성을 균형 있게 설명
+- 보호자의 불안을 최소화하는 표현을 우선 사용
+
+【형식 및 분량】
+1. 전체 리포트는 **4~5개의 단락**으로 구성하세요.
+2. 각 단락은 **300~400자 내외**로 작성하세요.
+3. 반드시 **모두 한글**로 작성하세요.
+4. 실제 진료실에서 보호자와 마주 앉아 설명하는
+   차분하고 신뢰감 있는 어조를 사용하세요.
+
+【단락 구성 가이드】
+- 1단락: 내원 배경과 현재 성장 또는 사춘기 관련 소견의 요약
+- 2단락: 신장·성장속도 또는 사춘기 진행 정도의 의학적 해석
+- 3단락: 골연령 및 Tanner stage의 의미와 현재 시점에서의 판단
+- 4단락: 저신장 또는 조기 사춘기가 ‘의심되는 이유’와 정상 변이 가능성
+- 5단락(선택): 향후 검사·추적 관찰 계획 및 보호자 안내
+
+【의학적 표현 가이드】
+- 다음 표현을 적극 활용하세요:
+  “현재로서는 ○○ 가능성을 고려해볼 수 있습니다”
+  “아직 확정적으로 판단하기에는 이른 단계입니다”
+  “성장 패턴을 시간에 따라 확인하는 것이 중요합니다”
+- 저신장의 경우:
+  · 가족성 저신장
+  · 체질성 성장 지연
+  · 성장속도 유지 여부
+- 조기 사춘기의 경우:
+  · 사춘기 변이
+  · 진행 속도
+  · 골연령과의 관계
+를 반드시 언급하되, 일반 용어로 풀어 설명하세요.
+
+【보호자 안심 메시지 필수 포함】
+- “현재 단계에서 치료를 바로 결정해야 하는 상황은 아닙니다”
+- “정확한 판단을 위해 성장 경과를 보는 것이 중요합니다”
+- “조기에 확인하는 것은 오히려 아이에게 도움이 됩니다”
+중 2개 이상을 자연스럽게 포함하세요.
+
+【금지 사항】
+- 확정 진단 표현 사용 금지
+- 치료 시작을 전제로 한 설명 금지
+- 예후를 단정적으로 언급하지 말 것
+
+위 지침을 반드시 모두 준수하여
+저신장 또는 조기 사춘기 의심 환아의 초진 보호자 설명 리포트를 작성하세요.
+
+【입력 데이터】
+- 연령, 성별: ${formatNumber(patient?.chronologicalAge, 1, '세')} / ${patient?.gender || 'N/A'}
+- 현재 신장, 체중, BMI: ${formatNumber(reportContext?.currentHeight, 1, 'cm')} / ${formatNumber(reportContext?.currentWeight, 1, 'kg')} / ${formatNumber(reportContext?.bmi, 1)}
+- 성장 백분위(키/체중/BMI): ${formatNumber(reportContext?.heightPercentile, 1, '%')} / ${formatNumber(reportContext?.weightPercentile, 1, '%')} / ${formatNumber(reportContext?.bmiPercentile, 1, '%')}
+- 최근 성장속도(cm/년): ${formatNumber(reportContext?.growthVelocity, 1, ' cm/년')}
+- 과거 성장 기록: ${reportContext?.hasPriorGrowthRecords ? `있음 (${reportContext?.priorGrowthRecordCount}건)` : '없음'}
+- 부모 신장 및 가족력: 부 ${formatNumber(patient?.heightFather, 1, 'cm')}, 모 ${formatNumber(patient?.heightMother, 1, 'cm')}, 가족력: ${patient?.familyHistory || '제공되지 않음'}
+- Tanner stage: ${patient?.tannerStage || 'N/A'}
+- 골연령 검사 결과: ${formatNumber(patient?.boneAge, 1, '세')}
+- 혈액검사 결과(IGF-1 포함): ${JSON.stringify(labsWithIgf1 || [])}
+
+반드시 아래 JSON 형식으로만 답변하세요.
+{
+  "markdownReport": "여기에 4~5개 단락으로 구성된 한글 리포트 전문"
+}
+`;
+
     const system = 'You are a pediatric endocrinologist writing guardian-facing reports. Respond in Korean.';
-    const user = `
+    const standardPrompt = `
 당신은 소아청소년과 내분비 전문의이며, 성장클리닉에서 실제 보호자 상담에 사용되는 설명 리포트를 작성합니다.
 
 아래에 제공되는 환자의 모든 정보를 종합적으로 분석하여,
@@ -92,6 +184,8 @@ export async function POST(request: Request) {
   "markdownReport": "여기에 4~5개 단락으로 구성된 한글 리포트 전문"
 }
 `;
+
+    const user = isFirstVisit ? firstVisitPrompt : standardPrompt;
 
     const payload = {
       model: OPENAI_MODEL,
