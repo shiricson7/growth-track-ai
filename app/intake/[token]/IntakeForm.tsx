@@ -167,7 +167,7 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ token, expiresAt, prefill }) =>
                     <span className="text-sm font-medium text-slate-800">{field.label}</span>
                     <select
                       className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-700"
-                      value={value ?? ''}
+                      value={typeof value === 'string' || typeof value === 'number' ? value : ''}
                       onChange={(e) => updateAnswer(field.id, e.target.value)}
                     >
                       <option value="">선택</option>
