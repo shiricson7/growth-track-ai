@@ -242,7 +242,7 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ token, expiresAt, prefill }) =>
                       step={field.type === 'number' ? '0.1' : undefined}
                       className="w-full rounded-lg border border-slate-200 px-3 py-2 text-slate-700"
                       placeholder={field.placeholder}
-                      value={value ?? ''}
+                      value={typeof value === 'string' || typeof value === 'number' ? value : ''}
                       onChange={(e) => {
                         if (field.type !== 'number') {
                           updateAnswer(field.id, e.target.value);
