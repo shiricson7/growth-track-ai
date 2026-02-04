@@ -17,7 +17,7 @@ const serif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: 'GrowthTrack AI',
+  title: 'Growthclinic.ai',
   description: 'Comprehensive Pediatric Endocrinology Dashboard with AI Analysis, Growth Tracking, and Lab OCR.',
 };
 
