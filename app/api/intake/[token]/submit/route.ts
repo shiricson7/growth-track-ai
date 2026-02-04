@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../../../src/lib/supabaseAdmin';
 import { computeIntakeFlags } from '../../../../../src/lib/intake/flags';
 import { buildSummary } from '../../../../../src/lib/intake/summary';
@@ -6,11 +6,11 @@ import { INTAKE_SCHEMA_VERSION, IntakeAnswers } from '../../../../../src/lib/int
 import { isTokenExpired } from '../../../../../src/lib/intake/token';
 
 interface Params {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }
 
-export async function POST(request: Request, { params }: Params) {
-  const token = params.token;
+export async function POST(request: NextRequest, { params }: Params) {
+  const { token } = await params;
   const payload = await request.json().catch(() => null);
 
   if (!payload || typeof payload !== 'object') {
