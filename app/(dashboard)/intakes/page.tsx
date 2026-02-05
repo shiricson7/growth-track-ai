@@ -38,6 +38,7 @@ export default function IntakesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasSession, setHasSession] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadIntakes = async (nextFilter: FilterId) => {
     setLoading(true);
@@ -96,6 +97,22 @@ export default function IntakesPage() {
   useEffect(() => {
     loadIntakes(filter);
   }, [filter]);
+
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm('해당 문진을 삭제할까요? 삭제하면 복구할 수 없습니다.');
+    if (!confirmed) return;
+    setDeletingId(id);
+    setError(null);
+    try {
+      const { error: deleteError } = await supabase.from('intake_forms').delete().eq('id', id);
+      if (deleteError) throw deleteError;
+      setRows((prev) => prev.filter((row) => row.id !== id));
+    } catch (err: any) {
+      setError(err?.message || '문진 삭제에 실패했습니다.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
@@ -194,12 +211,22 @@ export default function IntakesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <Link
-                          href={`/intakes/${row.id}`}
-                          className="text-blue-600 text-sm font-semibold hover:text-blue-700"
-                        >
-                          상세 보기
-                        </Link>
+                        <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/intakes/${row.id}`}
+                            className="text-blue-600 text-sm font-semibold hover:text-blue-700"
+                          >
+                            상세 보기
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(row.id)}
+                            disabled={deletingId === row.id}
+                            className="text-sm font-semibold text-red-600 hover:text-red-700 disabled:opacity-60"
+                          >
+                            {deletingId === row.id ? '삭제 중...' : '삭제'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

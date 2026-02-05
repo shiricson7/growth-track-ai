@@ -14,6 +14,7 @@ const isEmptyValue = (value: any) => value === undefined || value === null || va
 const IntakeForm: React.FC<IntakeFormProps> = ({ token, expiresAt, prefill }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<IntakeAnswers>(prefill || {});
+  const [consentChecked, setConsentChecked] = useState(false);
 
   useEffect(() => {
     if (prefill) {
@@ -49,6 +50,10 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ token, expiresAt, prefill }) =>
       setError('필수 항목을 입력해 주세요.');
       return false;
     }
+    if (currentStep === sections.length - 1 && !consentChecked) {
+      setError('개인정보 및 인공지능 활용 안내에 동의해 주세요.');
+      return false;
+    }
     setError(null);
     return true;
   };
@@ -72,7 +77,10 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ token, expiresAt, prefill }) =>
       const res = await fetch(`/api/intake/${token}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, version: INTAKE_SCHEMA_VERSION }),
+        body: JSON.stringify({
+          answers: { ...answers, ai_consent: consentChecked },
+          version: INTAKE_SCHEMA_VERSION,
+        }),
       });
       if (!res.ok) {
         const payload = await res.json().catch(() => ({}));
@@ -260,6 +268,35 @@ const IntakeForm: React.FC<IntakeFormProps> = ({ token, expiresAt, prefill }) =>
               );
             })}
           </div>
+
+          {currentStep === sections.length - 1 && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-amber-900">개인정보 및 인공지능 활용 안내</h3>
+              <div className="text-sm text-amber-900 space-y-2 leading-relaxed">
+                <p>
+                  본 성장클리닉에서는 <strong>성장 평가 및 진료 설명을 위해</strong>{' '}
+                  <strong>ChatGPT 등 인공지능 기술을 보조적으로 활용</strong>하고 있습니다.
+                </p>
+                <p>
+                  이 과정에서 아이의 <strong>생년월일, 성별, 키, 몸무게 등 일부 진료 정보</strong>가 인공지능
+                  시스템으로 전송될 수 있습니다.
+                </p>
+                <p>
+                  해당 정보는 <strong>인공지능 학습이나 외부 목적에는 사용되지 않으며</strong>,{' '}
+                  <strong>진료 지원을 위한 범위 내에서만 안전하게 이용</strong>됩니다.
+                </p>
+              </div>
+              <label className="flex items-start gap-3 text-sm font-semibold text-amber-900">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 h-4 w-4"
+                  checked={consentChecked}
+                  onChange={(e) => setConsentChecked(e.target.checked)}
+                />
+                <span>위 내용을 확인하였으며, 이에 동의합니다.</span>
+              </label>
+            </div>
+          )}
 
           {error && <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3">{error}</div>}
 
