@@ -9,6 +9,7 @@ import { growthStandards } from '../src/utils/growthStandards';
 import { calculateIGF1Percentile, getAgeYearsAtDate, isIGF1Parameter, isLikelyNgMlUnit } from '../src/utils/igf1Roche';
 import { aiEnabled } from '../src/services/ai';
 import BoneAgeHistory from './BoneAgeHistory';
+import IntakeQrModal from './IntakeQrModal';
 
 const CHART_COLORS = {
   patient: '#2f4b76',
@@ -55,6 +56,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   const [labViewMode, setLabViewMode] = React.useState<'list' | 'trend'>('list');
   const [showBoneAgeHistory, setShowBoneAgeHistory] = React.useState(false);
   const [selectedParameter, setSelectedParameter] = React.useState<string>('');
+  const [qrOpen, setQrOpen] = React.useState(false);
 
   // Sorting measurements for history list
   const sortedMeasurements = [...measurements]
@@ -179,11 +181,27 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               >
                 복사
               </button>
+              <button
+                type="button"
+                onClick={() => setQrOpen(true)}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50"
+              >
+                QR 보기
+              </button>
             </div>
             <p className="text-xs text-slate-400">만료: {new Date(intakeLink.expiresAt).toLocaleString('ko-KR')}</p>
           </div>
         )}
       </div>
+
+      {intakeLink && (
+        <IntakeQrModal
+          open={qrOpen}
+          onClose={() => setQrOpen(false)}
+          url={intakeLink.url}
+          expiresAt={intakeLink.expiresAt}
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

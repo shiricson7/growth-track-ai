@@ -4,11 +4,13 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../../src/lib/supabase';
 import { api } from '../../../src/services/api';
+import IntakeQrModal from '../../../components/IntakeQrModal';
 
 interface IntakeRow {
   id: string;
   submitted_at: string;
   status: string;
+  token?: string | null;
   patient?: {
     id: string;
     name: string;
@@ -39,6 +41,8 @@ export default function IntakesPage() {
   const [error, setError] = useState<string | null>(null);
   const [hasSession, setHasSession] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
 
   const loadIntakes = async (nextFilter: FilterId) => {
     setLoading(true);
@@ -62,7 +66,7 @@ export default function IntakesPage() {
       let query = supabase
         .from('intake_forms')
         .select(
-          'id, submitted_at, status, patient:patients(id, name, gender, chart_number), answers:intake_answers(flags_json, summary_json)'
+          'id, submitted_at, status, token, patient:patients(id, name, gender, chart_number), answers:intake_answers(flags_json, summary_json)'
         )
         .order('submitted_at', { ascending: false })
         .limit(100);
@@ -97,6 +101,16 @@ export default function IntakesPage() {
   useEffect(() => {
     loadIntakes(filter);
   }, [filter]);
+
+  const handleShowQr = (token?: string | null) => {
+    if (!token) {
+      alert('문진 링크가 없습니다.');
+      return;
+    }
+    const origin = window.location.origin;
+    setQrUrl(`${origin}/intake/${token}`);
+    setQrOpen(true);
+  };
 
   const handleDelete = async (id: string) => {
     const confirmed = window.confirm('해당 문진을 삭제할까요? 삭제하면 복구할 수 없습니다.');
@@ -220,6 +234,13 @@ export default function IntakesPage() {
                           </Link>
                           <button
                             type="button"
+                            onClick={() => handleShowQr(row.token)}
+                            className="text-sm font-semibold text-slate-600 hover:text-slate-800"
+                          >
+                            QR 보기
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleDelete(row.id)}
                             disabled={deletingId === row.id}
                             className="text-sm font-semibold text-red-600 hover:text-red-700 disabled:opacity-60"
@@ -236,6 +257,14 @@ export default function IntakesPage() {
           </div>
         )}
       </div>
+
+      {qrUrl && (
+        <IntakeQrModal
+          open={qrOpen}
+          onClose={() => setQrOpen(false)}
+          url={qrUrl}
+        />
+      )}
     </div>
   );
 }
