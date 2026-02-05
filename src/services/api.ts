@@ -222,8 +222,35 @@ export const api = {
 
         if (error) throw error;
 
-        // Return mapped back
         const p = data as any;
+
+        // Create initial measurement from registration inputs (height/weight/visitDate)
+        const visitDate = (patient as any).visitDate as string | undefined;
+        const heightValueRaw = (patient as any).height as number | undefined;
+        const weightValueRaw = (patient as any).weight as number | undefined;
+        const heightValue = Number.isFinite(heightValueRaw) && heightValueRaw! > 0 ? heightValueRaw : null;
+        const weightValue = Number.isFinite(weightValueRaw) && weightValueRaw! > 0 ? weightValueRaw : null;
+
+        if (visitDate && (heightValue !== null || weightValue !== null)) {
+            const { error: measurementError } = await supabase
+                .from('measurements')
+                .insert([
+                    {
+                        patient_id: p.id,
+                        date: visitDate,
+                        height: heightValue,
+                        weight: weightValue
+                    }
+                ]);
+
+            if (measurementError) {
+                // Best-effort rollback to avoid orphan patient without initial measurement
+                await supabase.from('patients').delete().eq('id', p.id);
+                throw measurementError;
+            }
+        }
+
+        // Return mapped back
         return {
             ...p,
             dob: p.birth_date,
