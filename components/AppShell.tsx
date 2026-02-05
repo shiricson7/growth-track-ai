@@ -165,14 +165,16 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
     }
   };
 
+  const sessionUserId = session?.user?.id;
+
   useEffect(() => {
-    if (!session) {
+    if (!sessionUserId) {
       setClinic(null);
       setClinicLoading(false);
       return;
     }
     loadClinic();
-  }, [session]);
+  }, [sessionUserId]);
 
   useEffect(() => {
     if (!pendingPatientId) return;
