@@ -10,6 +10,8 @@ interface IntakePageProps {
 
 export default async function IntakePage({ params }: IntakePageProps) {
   const token = params.token;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseHost = supabaseUrl ? new URL(supabaseUrl).host : 'missing';
   const { data, error } = await supabaseAdmin
     .from('intake_tokens')
     .select('token, expires_at, status, patient:patients(name, birth_date, gender, height_father, height_mother)')
@@ -17,6 +19,12 @@ export default async function IntakePage({ params }: IntakePageProps) {
     .maybeSingle();
 
   if (error || !data) {
+    console.error('[intake] token lookup failed', {
+      token,
+      supabaseHost,
+      error: error ? { message: error.message, code: error.code, details: error.details } : null,
+      found: Boolean(data),
+    });
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-sm">
@@ -28,6 +36,12 @@ export default async function IntakePage({ params }: IntakePageProps) {
   }
 
   if (data.status !== 'active' || isTokenExpired(data.expires_at)) {
+    console.warn('[intake] token inactive or expired', {
+      token,
+      supabaseHost,
+      status: data.status,
+      expiresAt: data.expires_at,
+    });
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-sm">
