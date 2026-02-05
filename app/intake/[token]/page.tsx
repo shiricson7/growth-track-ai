@@ -5,13 +5,29 @@ import { isTokenExpired } from '../../../src/lib/intake/token';
 export const dynamic = 'force-dynamic';
 
 interface IntakePageProps {
-  params: { token: string };
+  params: Promise<{ token: string }> | { token: string };
 }
 
 export default async function IntakePage({ params }: IntakePageProps) {
-  const token = params.token;
+  const resolvedParams = await Promise.resolve(params);
+  const token = resolvedParams?.token;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseHost = supabaseUrl ? new URL(supabaseUrl).host : 'missing';
+
+  if (!token) {
+    console.error('[intake] missing token param', {
+      token,
+      supabaseHost,
+    });
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-sm">
+          <h1 className="text-xl font-bold text-slate-900">문진 링크를 확인할 수 없습니다</h1>
+          <p className="text-slate-500 mt-2">링크가 유효하지 않거나 만료되었습니다.</p>
+        </div>
+      </div>
+    );
+  }
   const { data, error } = await supabaseAdmin
     .from('intake_tokens')
     .select('token, expires_at, status, patient:patients(name, birth_date, gender, height_father, height_mother)')
