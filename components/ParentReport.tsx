@@ -516,7 +516,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                   기준일: {latestMeasurement?.date || '기록 없음'}
                 </span>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
                   <div className="text-xs text-slate-500 mb-1">현재 키</div>
                   <div className="flex items-end gap-2">
@@ -530,6 +530,15 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                       키 백분위 {heightPercentile.toFixed(1)}%
                     </span>
                   )}
+                </div>
+                <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
+                  <div className="text-xs text-slate-500 mb-1">예측 키</div>
+                  <div className="flex items-end gap-2">
+                    <span className="text-2xl font-bold text-slate-900">
+                      {predictedHeightValue ? predictedHeightValue.toFixed(1) : '-'}
+                    </span>
+                    <span className="text-sm text-slate-500">cm</span>
+                  </div>
                 </div>
                 <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
                   <div className="text-xs text-slate-500 mb-1">현재 체중</div>
@@ -563,7 +572,6 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
 
           {/* Footer */}
           <div className="mt-12 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm print-section">
-            <p>{'\uC608\uCE21 \uC131\uC778\uD0A4(PAH)'}: {predictedHeightValue ? predictedHeightValue.toFixed(1) : '-'} cm</p>
             <p>{settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}</p>
           </div>
         </div>
@@ -623,13 +631,19 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
               <h3 className="text-sm font-bold text-slate-800">현재 체격 요약</h3>
               <span className="text-xs text-slate-400">기준일: {latestMeasurement?.date || '기록 없음'}</span>
             </div>
-            <div className="grid grid-cols-3 gap-3 text-xs">
+            <div className="grid grid-cols-4 gap-3 text-xs">
               <div className="border border-slate-100 rounded-lg p-3 bg-slate-50">
                 <div className="text-slate-500">현재 키</div>
                 <div className="font-bold text-slate-900">{latestHeight ? latestHeight.toFixed(1) : '-'} cm</div>
                 {heightPercentile !== null && (
                   <div className="text-blue-700 font-semibold mt-1">키 백분위 {heightPercentile.toFixed(1)}%</div>
                 )}
+              </div>
+              <div className="border border-slate-100 rounded-lg p-3 bg-slate-50">
+                <div className="text-slate-500">예측 키</div>
+                <div className="font-bold text-slate-900">
+                  {predictedHeightValue ? predictedHeightValue.toFixed(1) : '-'} cm
+                </div>
               </div>
               <div className="border border-slate-100 rounded-lg p-3 bg-slate-50">
                 <div className="text-slate-500">현재 체중</div>
@@ -650,7 +664,6 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         </div>
 
         <div className="print-section mt-8 text-xs text-slate-500 border-t border-slate-200 pt-3">
-          <div>{'\uC608\uCE21 \uC131\uC778\uD0A4(PAH)'}: {predictedHeightValue ? predictedHeightValue.toFixed(1) : '-'} cm</div>
           {settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}
         </div>
       </div>
