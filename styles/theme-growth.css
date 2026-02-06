@@ -98,8 +98,16 @@
     @apply placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40;
   }
 
-  .badge { @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold; }
-  .badge-growth-accent { @apply badge bg-accent/15 text-accent; }
-  .badge-growth-calm   { @apply badge bg-calm/15 text-calm; }
-  .badge-growth-muted  { @apply badge bg-black/5 text-text-subtle; }
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .badge-growth-accent {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-accent/15 text-accent;
+  }
+  .badge-growth-calm {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-calm/15 text-calm;
+  }
+  .badge-growth-muted {
+    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-black/5 text-text-subtle;
+  }
 }
