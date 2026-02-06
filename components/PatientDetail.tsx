@@ -34,6 +34,7 @@ interface PatientDetailProps {
   intakeLink?: { url: string; expiresAt: string } | null;
   intakeLinkLoading?: boolean;
   onCreateIntakeLink?: () => void;
+  accessLevel?: 'owner' | 'staff' | 'tablet';
 }
 
 const PatientDetail: React.FC<PatientDetailProps> = ({
@@ -50,13 +51,18 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
   onEditPatient,
   intakeLink,
   intakeLinkLoading,
-  onCreateIntakeLink
+  onCreateIntakeLink,
+  accessLevel = 'owner'
 }) => {
   /* Lab History State */
   const [labViewMode, setLabViewMode] = React.useState<'list' | 'trend'>('list');
   const [showBoneAgeHistory, setShowBoneAgeHistory] = React.useState(false);
   const [selectedParameter, setSelectedParameter] = React.useState<string>('');
   const [qrOpen, setQrOpen] = React.useState(false);
+
+  const showClinicalSections = accessLevel === 'owner';
+  const showPatientInfoDetails = accessLevel !== 'tablet';
+  const showEditControls = accessLevel === 'owner';
 
   // Sorting measurements for history list
   const sortedMeasurements = [...measurements]
@@ -96,6 +102,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900">{patient.name}</h1>
+              {showPatientInfoDetails && (
               <div className="flex gap-4 text-sm text-slate-500 mt-1">
                 <span className="flex items-center gap-1"><Calendar size={14} /> 생년월일: {patient.dob} (만 {Number.isFinite(patient.chronologicalAge) ? patient.chronologicalAge.toFixed(1) : '-'}세)</span>
                 {/* Find latest bone age from sorted measurements or fallback to patient record */}
@@ -128,8 +135,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
                   </span>
                 </span>
               </div>
+              )}
             </div>
           </div>
+          {showEditControls && (
           <div className="flex gap-3">
             <button
               onClick={onEditPatient}
@@ -140,6 +149,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               환자 정보 수정
             </button>
           </div>
+          )}
         </div>
       </div>
 
@@ -203,6 +213,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
         />
       )}
 
+      {showClinicalSections && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Growth Chart */}
@@ -647,6 +658,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           onClose={() => setShowBoneAgeHistory(false)}
           onUpdate={onRefresh}
         />
+      )}
       )}
     </div>
   );

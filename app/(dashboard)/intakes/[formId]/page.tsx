@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { supabase } from '../../../../src/lib/supabase';
+import { api } from '../../../../src/services/api';
 import { intakeSchemaV1 } from '../../../../src/lib/intake/schema';
 
 interface IntakeDetail {
@@ -55,6 +56,14 @@ export default function IntakeDetailPage() {
         if (!sessionData.session) {
           setDetail(null);
           setError('로그인이 필요합니다.');
+          setLoading(false);
+          return;
+        }
+        const clinic = await api.getMyClinic();
+        const normalizedRole = clinic?.role === 'member' ? 'staff' : clinic?.role;
+        if (normalizedRole === 'tablet') {
+          setDetail(null);
+          setError('\uad8c\ud55c\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.');
           setLoading(false);
           return;
         }

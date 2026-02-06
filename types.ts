@@ -65,10 +65,20 @@ export interface ClinicInfo {
   id: string;
   name: string;
   clinicCode?: string;
-  role?: 'owner' | 'member';
+  role?: ClinicRole;
   doctorName?: string | null;
   address?: string | null;
   phone?: string | null;
+}
+
+// NOTE: 'member' is a legacy role stored in older data; treat as 'staff'.
+export type ClinicRole = 'owner' | 'staff' | 'tablet' | 'member';
+
+export interface ClinicMember {
+  id: string;
+  userId: string;
+  role: ClinicRole;
+  createdAt: string;
 }
 
 export interface Patient {

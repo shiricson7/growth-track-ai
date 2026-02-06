@@ -13,11 +13,14 @@ export interface ClinicSettings {
 interface SettingsProps {
     settings: ClinicSettings;
     onSave: (settings: ClinicSettings) => void;
+    clinicCode?: string;
+    showInvite?: boolean;
 }
 
-const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
+const Settings: React.FC<SettingsProps> = ({ settings, onSave, clinicCode, showInvite }) => {
     const [formData, setFormData] = useState<ClinicSettings>(settings);
     const [isSaved, setIsSaved] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         setFormData(settings);
@@ -30,8 +33,37 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
         setTimeout(() => setIsSaved(false), 3000);
     };
 
+    const handleCopy = async () => {
+        if (!clinicCode) return;
+        if (navigator?.clipboard?.writeText) {
+            await navigator.clipboard.writeText(clinicCode);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
     return (
         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {showInvite && clinicCode && (
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+                <h3 className="text-sm font-semibold text-slate-700">클리닉 코드 (멤버 초대용)</h3>
+                <div className="mt-3 flex flex-col md:flex-row gap-2">
+                    <input
+                        value={clinicCode}
+                        readOnly
+                        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-mono"
+                    />
+                    <button
+                        type="button"
+                        onClick={handleCopy}
+                        className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-white"
+                    >
+                        {copied ? '복사됨' : '복사'}
+                    </button>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">직원/태블릿 계정은 로그인 후 클리닉 코드로 참여할 수 있습니다.</p>
+            </div>
+        )}
         <div className="bg-white p-6 rounded-2xl shadow-soft border border-slate-200">
                 <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-6">
                     <SettingsIcon className="text-slate-400" />

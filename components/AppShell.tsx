@@ -16,6 +16,7 @@ import {
   Ruler,
   Activity,
   ClipboardList,
+  Users,
 } from 'lucide-react';
 import PatientDetail from './PatientDetail';
 import PatientList from './PatientList';
@@ -28,6 +29,8 @@ import Settings, { ClinicSettings } from './Settings';
 import MedicationManager from './MedicationManager';
 import Auth from './Auth';
 import ClinicOnboarding from './ClinicOnboarding';
+import IntakesDashboard from './IntakesDashboard';
+import MembershipManager from './MembershipManager';
 import { ClinicInfo, LabResult, Patient } from '../types';
 import { api } from '../src/services/api';
 import { aiService } from '../src/services/ai';
@@ -43,7 +46,9 @@ type View =
   | 'patient-form'
   | 'bone-age'
   | 'measurement-input'
-  | 'medication-setup';
+  | 'medication-setup'
+  | 'intakes'
+  | 'membership';
 
 function AppShell({ initialPatientId }: { initialPatientId?: string }) {
   /* Supabase & AI Integration */
@@ -51,6 +56,7 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
   const [clinic, setClinic] = useState<ClinicInfo | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [clinicLoading, setClinicLoading] = useState(false);
+  const [clinicError, setClinicError] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [labResults, setLabResults] = useState<LabResult[]>([]);
@@ -61,6 +67,23 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
   const [intakeLink, setIntakeLink] = useState<{ url: string; expiresAt: string } | null>(null);
   const [intakeLinkLoading, setIntakeLinkLoading] = useState(false);
   const [pendingPatientId, setPendingPatientId] = useState<string | undefined>(initialPatientId);
+
+  const normalizedRole = clinic?.role === 'member' ? 'staff' : clinic?.role;
+  const role = normalizedRole || 'staff';
+  const isOwner = role === 'owner';
+  const isStaff = role === 'staff';
+  const isTablet = role === 'tablet';
+  const canRegisterPatient = isOwner || isStaff;
+  const canAccessIntakes = isOwner || isStaff;
+  const canAccessClinicalTools = isOwner;
+  const canEditPatient = isOwner;
+  const isViewAllowed = (view: View) => {
+    if (view === 'dashboard' || view === 'patient-detail') return true;
+    if (view === 'patient-form') return canRegisterPatient;
+    if (view === 'intakes') return canAccessIntakes;
+    if (view === 'membership' || view === 'settings') return isOwner;
+    return isOwner;
+  };
 
   // Settings State
   const [clinicSettings, setClinicSettings] = useState<ClinicSettings>({
@@ -124,16 +147,26 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
     setPendingPatientId(initialPatientId);
   }, [initialPatientId]);
 
+  useEffect(() => {
+    if (!isViewAllowed(currentView)) {
+      setCurrentView('dashboard');
+    }
+  }, [currentView, role]);
+
   const loadClinic = async () => {
     if (!session) {
       setClinic(null);
       return;
     }
     setClinicLoading(true);
+    setClinicError(null);
     try {
       const myClinic = await api.getMyClinic();
       const prevClinicId = clinic?.id || null;
       setClinic(myClinic);
+      if (!myClinic) {
+        setClinicError('\uacc4\uc815\uc5d0 \uc5f0\uacb0\ub41c \ud074\ub9ac\ub2c9\uc774 \uc5c6\uc2b5\ub2c8\ub2e4. \ucd08\ub300 \ucf54\ub4dc\ub85c \ucc38\uc5ec\ud558\uac70\ub098 \uc0c8 \ud074\ub9ac\ub2c9\uc744 \uc0dd\uc131\ud574\uc8fc\uc138\uc694.');
+      }
       if (myClinic) {
         setClinicSettings((prev) => ({
           hospitalName: myClinic.name || prev.hospitalName,
@@ -159,6 +192,8 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
       await loadData(myClinic.id);
     } catch (e) {
       console.error('Failed to load clinic', e);
+      const message = (e as any)?.message ? String((e as any).message) : 'Unknown error';
+      setClinicError(`\uD074\ub9AC\ub2C9 \ub85C\ub529 \uc2E4\ud328: ${message}`);
       setClinic(null);
     } finally {
       setClinicLoading(false);
@@ -417,11 +452,19 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
   };
 
   const handleEditPatient = (patient: Patient) => {
+    if (!canEditPatient) {
+      alert('\uad8c\ud55c\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.');
+      return;
+    }
     setEditingPatient(patient);
     setCurrentView('patient-form');
   };
 
   const handleSidebarClick = (view: View) => {
+    if (!isViewAllowed(view)) {
+      alert('\uad8c\ud55c\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.');
+      return;
+    }
     if (
       (view === 'ocr' || view === 'report' || view === 'bone-age' || view === 'measurement-input') &&
       !currentPatient
@@ -474,7 +517,11 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
       )}
 
       {!authLoading && session && !clinicLoading && !clinic && (
-        <ClinicOnboarding initialClinicName={clinicSettings.hospitalName} onComplete={loadClinic} />
+        <ClinicOnboarding
+          initialClinicName={clinicSettings.hospitalName}
+          onComplete={loadClinic}
+          externalError={clinicError}
+        />
       )}
 
       {!authLoading && session && !clinicLoading && clinic && (
@@ -482,43 +529,42 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
           {/* Sidebar */}
           <aside className="w-64 bg-white/90 backdrop-blur border-r border-slate-200 hidden md:flex flex-col app-sidebar">
             <div className="p-6 border-b border-slate-100">
-              <div className="flex items-center gap-3 text-blue-700">
-                <div className="bg-blue-700 text-white p-2 rounded-xl shadow-soft">
-                  <LayoutDashboard size={20} />
+              <button onClick={() => setCurrentView('dashboard')} className="w-full text-left">
+                <div className="flex items-center gap-3 text-blue-700">
+                  <div className="bg-blue-700 text-white p-2 rounded-xl shadow-soft">
+                    <LayoutDashboard size={20} />
+                  </div>
+                  <div>
+                    <span className="text-xl font-bold tracking-tight">{clinic?.name || clinicSettings.hospitalName}</span>
+                    <p className="text-xs text-slate-400 mt-1">Pediatric Endocrinology</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-xl font-bold tracking-tight">{clinic?.name || clinicSettings.hospitalName}</span>
-                  <p className="text-xs text-slate-400 mt-1">Pediatric Endocrinology</p>
-                </div>
-              </div>
+              </button>
             </div>
 
             <nav className="flex-1 p-4 space-y-2">
-              <div className="mb-6">
-                <button
-                  onClick={() => setCurrentView('patient-form')}
-                  className="w-full bg-blue-700 text-white p-3 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-800 transition-colors shadow-soft"
-                >
-                  <UserPlus size={18} />
-                  <span className="font-medium">신규 환자 등록</span>
-                </button>
-              </div>
+              {canRegisterPatient && (
+                <div className="mb-6">
+                  <button
+                    onClick={() => setCurrentView('patient-form')}
+                    className="w-full bg-blue-700 text-white p-3 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-800 transition-colors shadow-soft"
+                  >
+                    <UserPlus size={18} />
+                    <span className="font-medium">신규 환자 등록</span>
+                  </button>
+                </div>
+              )}
               <SidebarItem view="dashboard" icon={LayoutDashboard} label="대시보드" />
-              <SidebarItem view="measurement-input" icon={Activity} label="신체 계측 (방문)" />
-              <SidebarItem view="bone-age" icon={Ruler} label="골연령 판독" />
-              <SidebarItem view="ocr" icon={ScanLine} label="결과지 스캔 (OCR)" />
-              <SidebarItem view="report" icon={FileText} label="리포트 생성" />
-              <button
-                onClick={() => (window.location.href = '/intakes')}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-slate-600 hover:bg-slate-100"
-              >
-                <ClipboardList size={20} />
-                <span className="font-medium tracking-tight">문진 대시보드</span>
-              </button>
+              {canAccessClinicalTools && <SidebarItem view="measurement-input" icon={Activity} label="신체 계측 (방문)" />}
+              {canAccessClinicalTools && <SidebarItem view="bone-age" icon={Ruler} label="골연령 판독" />}
+              {canAccessClinicalTools && <SidebarItem view="ocr" icon={ScanLine} label="결과지 스캔 (OCR)" />}
+              {canAccessClinicalTools && <SidebarItem view="report" icon={FileText} label="리포트 생성" />}
+              {canAccessIntakes && <SidebarItem view="intakes" icon={ClipboardList} label="문진 대시보드" />}
+              {isOwner && <SidebarItem view="membership" icon={Users} label="멤버십 관리" />}
             </nav>
 
             <div className="p-4 border-t border-slate-100">
-              <SidebarItem view="settings" icon={SettingsIcon} label="설정" />
+              {isOwner && <SidebarItem view="settings" icon={SettingsIcon} label="설정" />}
               <div className="mt-4 flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                 <div className="h-9 w-9 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center font-bold text-xs">
                   DR
@@ -587,8 +633,15 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
                 <PatientList
                   patients={patients}
                   onSelectPatient={handleSelectPatient}
-                  onRegisterNew={() => setCurrentView('patient-form')}
+                  onRegisterNew={canRegisterPatient ? () => setCurrentView('patient-form') : undefined}
+                  showRegister={canRegisterPatient}
                 />
+              )}
+
+              {currentView === 'intakes' && <IntakesDashboard embedded />}
+
+              {currentView === 'membership' && clinic && (
+                <MembershipManager clinic={clinic} currentUserId={sessionUserId} />
               )}
 
               {currentView === 'patient-detail' && currentPatient && (
@@ -610,8 +663,9 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
                     onAnalyzeGrowth={handleAIAnalysis}
                     isAnalyzing={isAnalyzing}
                     onRefresh={() => currentPatient && loadPatientData(currentPatient.id)}
-                    onManageMedication={() => setCurrentView('medication-setup')}
-                    onEditPatient={() => handleEditPatient(currentPatient)}
+                    onManageMedication={isOwner ? () => setCurrentView('medication-setup') : undefined}
+                    onEditPatient={canEditPatient ? () => handleEditPatient(currentPatient) : undefined}
+                    accessLevel={isTablet ? 'tablet' : isOwner ? 'owner' : 'staff'}
                     intakeLink={intakeLink}
                     intakeLinkLoading={intakeLinkLoading}
                     onCreateIntakeLink={handleCreateIntakeLink}
@@ -668,7 +722,12 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
 
               {currentView === 'settings' && (
                 <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-50 rounded-2xl border border-slate-100">
-                  <Settings settings={clinicSettings} onSave={updateSettings} />
+                  <Settings
+                    settings={clinicSettings}
+                    onSave={updateSettings}
+                    clinicCode={clinic?.clinicCode}
+                    showInvite={isOwner}
+                  />
                 </div>
               )}
             </div>

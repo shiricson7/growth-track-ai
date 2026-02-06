@@ -21,7 +21,7 @@ create table if not exists clinic_memberships (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   clinic_id uuid references clinics(id) on delete cascade not null,
   user_id uuid references auth.users(id) on delete cascade not null,
-  role text check (role in ('owner', 'member')) not null default 'member',
+  role text check (role in ('owner', 'staff', 'tablet')) not null default 'staff',
   unique (clinic_id, user_id),
   unique (user_id)
 );
@@ -143,6 +143,9 @@ alter table clinic_memberships enable row level security;
 drop policy if exists "Enable all access for all users" on clinic_memberships;
 drop policy if exists "Users can read own membership" on clinic_memberships;
 drop policy if exists "Users can insert own membership" on clinic_memberships;
+drop policy if exists "Clinic owners can read memberships" on clinic_memberships;
+drop policy if exists "Clinic owners can update memberships" on clinic_memberships;
+drop policy if exists "Clinic owners can delete memberships" on clinic_memberships;
 
 create policy "Users can read own membership"
   on clinic_memberships for select
@@ -151,6 +154,31 @@ create policy "Users can read own membership"
 create policy "Users can insert own membership"
   on clinic_memberships for insert
   with check (user_id = auth.uid());
+
+create policy "Clinic owners can read memberships"
+  on clinic_memberships for select
+  using (exists (
+    select 1 from clinic_memberships m
+    where m.clinic_id = clinic_memberships.clinic_id and m.user_id = auth.uid() and m.role = 'owner'
+  ));
+
+create policy "Clinic owners can update memberships"
+  on clinic_memberships for update
+  using (exists (
+    select 1 from clinic_memberships m
+    where m.clinic_id = clinic_memberships.clinic_id and m.user_id = auth.uid() and m.role = 'owner'
+  ))
+  with check (exists (
+    select 1 from clinic_memberships m
+    where m.clinic_id = clinic_memberships.clinic_id and m.user_id = auth.uid() and m.role = 'owner'
+  ));
+
+create policy "Clinic owners can delete memberships"
+  on clinic_memberships for delete
+  using (exists (
+    select 1 from clinic_memberships m
+    where m.clinic_id = clinic_memberships.clinic_id and m.user_id = auth.uid() and m.role = 'owner'
+  ));
 
 -- Patients
 alter table patients enable row level security;
@@ -381,7 +409,7 @@ begin
   end if;
 
   insert into clinic_memberships (clinic_id, user_id, role)
-  values (v_clinic_id, auth.uid(), 'member')
+  values (v_clinic_id, auth.uid(), 'staff')
   on conflict (user_id) do update set clinic_id = excluded.clinic_id;
 
   return v_clinic_id;

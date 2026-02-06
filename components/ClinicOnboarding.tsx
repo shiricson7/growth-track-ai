@@ -9,9 +9,10 @@ import { supabase } from '../src/lib/supabase';
 interface ClinicOnboardingProps {
   onComplete: () => void;
   initialClinicName?: string;
+  externalError?: string | null;
 }
 
-const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ onComplete, initialClinicName }) => {
+const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ onComplete, initialClinicName, externalError }) => {
   const [mode, setMode] = useState<'create' | 'join'>('create');
   const [clinicName, setClinicName] = useState(initialClinicName || '');
   const [joinCode, setJoinCode] = useState('');
@@ -142,6 +143,11 @@ const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ onComplete, initial
 
         {error && (
           <div className="mt-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3">{error}</div>
+        )}
+        {!error && externalError && (
+          <div className="mt-4 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg p-3">
+            {externalError}
+          </div>
         )}
       </div>
     </div>

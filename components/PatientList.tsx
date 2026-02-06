@@ -7,14 +7,16 @@ import { User, Calendar, ChevronRight, Search, Activity, UserPlus } from 'lucide
 interface PatientListProps {
     patients: Patient[];
     onSelectPatient: (patient: Patient) => void;
-    onRegisterNew: () => void;
+    onRegisterNew?: () => void;
+    showRegister?: boolean;
 }
 
 const ITEMS_PER_PAGE = 15;
 
-const PatientList: React.FC<PatientListProps> = ({ patients, onSelectPatient, onRegisterNew }) => {
+const PatientList: React.FC<PatientListProps> = ({ patients, onSelectPatient, onRegisterNew, showRegister = true }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const canRegister = Boolean(showRegister && onRegisterNew);
 
     // Filter logic
     const filteredPatients = patients.filter(p =>
@@ -38,24 +40,34 @@ const PatientList: React.FC<PatientListProps> = ({ patients, onSelectPatient, on
     if (patients.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center h-full animate-in fade-in zoom-in duration-500 p-8">
-                <button
-                    onClick={onRegisterNew}
-                    className="relative group cursor-pointer transition-transform hover:scale-105 focus:outline-none"
-                >
+                {canRegister ? (
+                    <button
+                        onClick={onRegisterNew}
+                        className="relative group cursor-pointer transition-transform hover:scale-105 focus:outline-none"
+                    >
+                        <img
+                            src="/empty_placeholder.jpeg"
+                            alt="No patients found - Click to register"
+                            className="max-w-md w-full rounded-2xl shadow-xl border-4 border-white object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-2xl">
+                            <div className="bg-white/90 px-6 py-3 rounded-full font-bold text-slate-900 shadow-lg flex items-center gap-2">
+                                <UserPlus size={20} className="text-blue-600" />
+                            신규 환자 등록하기
+                            </div>
+                        </div>
+                    </button>
+                ) : (
                     <img
                         src="/empty_placeholder.jpeg"
-                        alt="No patients found - Click to register"
+                        alt="No patients found"
                         className="max-w-md w-full rounded-2xl shadow-xl border-4 border-white object-cover"
                     />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-2xl">
-                        <div className="bg-white/90 px-6 py-3 rounded-full font-bold text-slate-900 shadow-lg flex items-center gap-2">
-                            <UserPlus size={20} className="text-blue-600" />
-                            신규 환자 등록하기
-                        </div>
-                    </div>
-                </button>
+                )}
                 <p className="mt-6 text-slate-500 text-lg font-medium">등록된 환자가 없습니다.</p>
-                <p className="text-slate-400 text-sm">이미지를 클릭하여 첫 번째 환자를 등록하세요.</p>
+                {canRegister && (
+                    <p className="text-slate-400 text-sm">이미지를 클릭하여 첫 번째 환자를 등록하세요.</p>
+                )}
             </div>
         );
     }

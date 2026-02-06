@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Patient, Measurement, LabResult, ClinicInfo, AiReport, AiReportKind, IntakeToken } from '../../types';
+import { Patient, Measurement, LabResult, ClinicInfo, ClinicMember, ClinicRole, AiReport, AiReportKind, IntakeToken } from '../../types';
 
 const generateToken = () => {
     const cryptoObj = typeof globalThis !== 'undefined' ? (globalThis as any).crypto : null;
@@ -12,31 +12,51 @@ const generateToken = () => {
     return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
 };
 
+const normalizeClinicRole = (role?: string | null): ClinicRole | undefined => {
+    if (!role) return undefined;
+    if (role === 'member') return 'staff';
+    if (role === 'owner' || role === 'staff' || role === 'tablet') return role;
+    return 'staff';
+};
+
 export const api = {
     async getMyClinic(): Promise<ClinicInfo | null> {
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        if (!userData?.user) return null;
+        const { data: sessionData } = await supabase.auth.getSession();
+        let user = sessionData?.session?.user || null;
 
-        const { data, error } = await supabase
+        if (!user) {
+            const { data: userData, error: userError } = await supabase.auth.getUser();
+            if (userError) throw userError;
+            user = userData?.user || null;
+        }
+
+        if (!user) return null;
+
+        const { data: membership, error: membershipError } = await supabase
             .from('clinic_memberships')
-            .select('clinic_id, role, clinics(id, name, clinic_code, doctor_name, address, phone)')
-            .eq('user_id', userData.user.id)
+            .select('clinic_id, role')
+            .eq('user_id', user.id)
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
 
-        if (error) throw error;
-        if (!data || !data.clinics) return null;
+        if (membershipError) throw membershipError;
+        if (!membership?.clinic_id) return null;
 
-        const clinic = Array.isArray(data.clinics) ? data.clinics[0] : data.clinics;
+        const { data: clinic, error: clinicError } = await supabase
+            .from('clinics')
+            .select('id, name, clinic_code, doctor_name, address, phone')
+            .eq('id', membership.clinic_id)
+            .maybeSingle();
+
+        if (clinicError) throw clinicError;
         if (!clinic) return null;
 
         return {
-            id: data.clinic_id,
+            id: membership.clinic_id,
             name: clinic.name,
             clinicCode: clinic.clinic_code,
-            role: data.role,
+            role: normalizeClinicRole(membership.role),
             doctorName: clinic.doctor_name ?? null,
             address: clinic.address ?? null,
             phone: clinic.phone ?? null
@@ -85,6 +105,32 @@ export const api = {
 
         if (error) throw error;
         return data;
+    },
+
+    async getClinicMembers(clinicId: string): Promise<ClinicMember[]> {
+        const { data, error } = await supabase
+            .from('clinic_memberships')
+            .select('id, user_id, role, created_at')
+            .eq('clinic_id', clinicId)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        return (data || []).map((row: any) => ({
+            id: row.id,
+            userId: row.user_id,
+            role: normalizeClinicRole(row.role) || 'staff',
+            createdAt: row.created_at
+        })) as ClinicMember[];
+    },
+
+    async updateClinicMemberRole(memberId: string, role: 'owner' | 'staff' | 'tablet') {
+        const { error } = await supabase
+            .from('clinic_memberships')
+            .update({ role })
+            .eq('id', memberId);
+
+        if (error) throw error;
     },
 
     // --- Patients ---
