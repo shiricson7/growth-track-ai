@@ -138,7 +138,7 @@ const MembershipManager: React.FC<MembershipManagerProps> = ({ clinic, currentUs
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
                 <tr>
-                  <th className="px-6 py-3">사용자</th>
+                  <th className="px-6 py-3">이메일</th>
                   <th className="px-6 py-3">권한</th>
                   <th className="px-6 py-3">가입일</th>
                 </tr>
@@ -155,7 +155,10 @@ const MembershipManager: React.FC<MembershipManagerProps> = ({ clinic, currentUs
                     return (
                       <tr key={member.id} className="hover:bg-slate-50">
                         <td className="px-6 py-4">
-                          <div className="font-semibold text-slate-900">{member.userId}</div>
+                          <div className="font-semibold text-slate-900">{member.email || member.userId}</div>
+                          {member.email && (
+                            <div className="text-xs text-slate-400 mt-1">{member.userId}</div>
+                          )}
                           {isSelf && (
                             <div className="text-xs text-blue-600 mt-1">내 계정</div>
                           )}

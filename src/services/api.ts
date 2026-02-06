@@ -128,6 +128,20 @@ export const api = {
     },
 
     async getClinicMembers(clinicId: string): Promise<ClinicMember[]> {
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_clinic_members_with_emails', {
+            p_clinic_id: clinicId
+        });
+
+        if (!rpcError && Array.isArray(rpcData)) {
+            return rpcData.map((row: any) => ({
+                id: row.id,
+                userId: row.user_id,
+                role: normalizeClinicRole(row.role) || 'staff',
+                createdAt: row.created_at,
+                email: row.email ?? null
+            })) as ClinicMember[];
+        }
+
         const { data, error } = await supabase
             .from('clinic_memberships')
             .select('id, user_id, role, created_at')
@@ -140,7 +154,8 @@ export const api = {
             id: row.id,
             userId: row.user_id,
             role: normalizeClinicRole(row.role) || 'staff',
-            createdAt: row.created_at
+            createdAt: row.created_at,
+            email: null
         })) as ClinicMember[];
     },
 

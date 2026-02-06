@@ -79,6 +79,7 @@ export interface ClinicMember {
   userId: string;
   role: ClinicRole;
   createdAt: string;
+  email?: string | null;
 }
 
 export interface Patient {
