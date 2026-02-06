@@ -12,8 +12,8 @@ interface MembershipManagerProps {
 
 const roleOptions: { value: ClinicRole; label: string }[] = [
   { value: 'owner', label: 'Owner' },
-  { value: 'staff', label: '??' },
-  { value: 'tablet', label: '???' },
+  { value: 'staff', label: '직원' },
+  { value: 'tablet', label: '태블릿' },
 ];
 
 const formatDate = (value?: string | null) => {
@@ -37,7 +37,7 @@ const MembershipManager: React.FC<MembershipManagerProps> = ({ clinic, currentUs
       const rows = await api.getClinicMembers(clinic.id);
       setMembers(rows);
     } catch (err: any) {
-      setError(err?.message || '?? ??? ???? ?????.');
+      setError(err?.message || '멤버 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ const MembershipManager: React.FC<MembershipManagerProps> = ({ clinic, currentUs
       await api.updateClinicMemberRole(memberId, nextRole === 'member' ? 'staff' : nextRole);
       setMembers((prev) => prev.map((m) => (m.id === memberId ? { ...m, role: nextRole } : m)));
     } catch (err: any) {
-      setError(err?.message || '?? ??? ??????.');
+      setError(err?.message || '역할 변경에 실패했습니다.');
     } finally {
       setSavingId(null);
     }
@@ -85,23 +85,23 @@ const MembershipManager: React.FC<MembershipManagerProps> = ({ clinic, currentUs
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <Users size={20} className="text-blue-600" /> ??? ??
+              <Users size={20} className="text-blue-600" /> 멤버십 관리
             </h2>
-            <p className="text-sm text-slate-500 mt-1">?? ?? ??? ???? ??? ? ????.</p>
+            <p className="text-sm text-slate-500 mt-1">클리닉 멤버들의 역할과 권한을 관리할 수 있습니다.</p>
           </div>
           <button
             type="button"
             onClick={loadMembers}
             className="flex items-center gap-2 text-sm font-semibold text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg hover:bg-slate-50"
           >
-            <RefreshCw size={14} /> ????
+            <RefreshCw size={14} /> 새로고침
           </button>
         </div>
       </div>
 
       {clinic.clinicCode && (
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
-          <h3 className="text-sm font-semibold text-slate-700">??? ?? (?? ???)</h3>
+          <h3 className="text-sm font-semibold text-slate-700">클리닉 코드 (멤버 초대용)</h3>
           <div className="mt-3 flex flex-col md:flex-row gap-2">
             <input
               value={clinic.clinicCode}
@@ -113,20 +113,20 @@ const MembershipManager: React.FC<MembershipManagerProps> = ({ clinic, currentUs
               onClick={handleCopyCode}
               className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-white flex items-center gap-2"
             >
-              <Copy size={14} /> {copied ? '???' : '??'}
+              <Copy size={14} /> {copied ? '복사됨' : '복사'}
             </button>
           </div>
-          <p className="text-xs text-slate-500 mt-2">??/??? ??? ??? ? ??? ??? ??? ? ????.</p>
+          <p className="text-xs text-slate-500 mt-2">직원/태블릿 계정은 초대 코드로 가입할 수 있습니다.</p>
         </div>
       )}
 
       <div className="bg-white rounded-2xl shadow-soft border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100">
-          <p className="text-sm text-slate-500">?? Owner: {ownerCount}?</p>
+          <p className="text-sm text-slate-500">현재 Owner: {ownerCount}명</p>
         </div>
 
         {loading && (
-          <div className="p-6 text-center text-slate-500">???? ?...</div>
+          <div className="p-6 text-center text-slate-500">멤버를 불러오는 중...</div>
         )}
 
         {!loading && error && (
@@ -138,15 +138,15 @@ const MembershipManager: React.FC<MembershipManagerProps> = ({ clinic, currentUs
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
                 <tr>
-                  <th className="px-6 py-3">??</th>
-                  <th className="px-6 py-3">??</th>
-                  <th className="px-6 py-3">???</th>
+                  <th className="px-6 py-3">사용자</th>
+                  <th className="px-6 py-3">권한</th>
+                  <th className="px-6 py-3">가입일</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {members.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-slate-400">??? ??? ????.</td>
+                    <td colSpan={3} className="px-6 py-8 text-center text-slate-400">등록된 멤버가 없습니다.</td>
                   </tr>
                 ) : (
                   members.map((member) => {
@@ -157,7 +157,7 @@ const MembershipManager: React.FC<MembershipManagerProps> = ({ clinic, currentUs
                         <td className="px-6 py-4">
                           <div className="font-semibold text-slate-900">{member.userId}</div>
                           {isSelf && (
-                            <div className="text-xs text-blue-600 mt-1">? ??</div>
+                            <div className="text-xs text-blue-600 mt-1">내 계정</div>
                           )}
                         </td>
                         <td className="px-6 py-4">

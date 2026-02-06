@@ -1,4 +1,4 @@
--- Allow clinic owners to view and manage memberships in their clinic
+-- Avoid recursion in clinic_memberships policies by using a SECURITY DEFINER helper.
 create or replace function is_clinic_owner(p_clinic_id uuid)
 returns boolean
 language plpgsql
@@ -22,19 +22,9 @@ $$;
 
 grant execute on function is_clinic_owner(uuid) to authenticated;
 
-drop policy if exists "Users can read own membership" on clinic_memberships;
-drop policy if exists "Users can insert own membership" on clinic_memberships;
 drop policy if exists "Clinic owners can read memberships" on clinic_memberships;
 drop policy if exists "Clinic owners can update memberships" on clinic_memberships;
 drop policy if exists "Clinic owners can delete memberships" on clinic_memberships;
-
-create policy "Users can read own membership"
-  on clinic_memberships for select
-  using (user_id = auth.uid());
-
-create policy "Users can insert own membership"
-  on clinic_memberships for insert
-  with check (user_id = auth.uid());
 
 create policy "Clinic owners can read memberships"
   on clinic_memberships for select
