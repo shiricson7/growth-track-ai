@@ -45,18 +45,18 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, clinicCode, showI
     return (
         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         {showInvite && clinicCode && (
-            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6">
+            <div className="card-growth p-6">
                 <h3 className="text-sm font-semibold text-slate-700">클리닉 코드 (멤버 초대용)</h3>
                 <div className="mt-3 flex flex-col md:flex-row gap-2">
                     <input
                         value={clinicCode}
                         readOnly
-                        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-mono"
+                        className="input-growth flex-1 font-mono"
                     />
                     <button
                         type="button"
                         onClick={handleCopy}
-                        className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-white"
+                        className="btn-growth"
                     >
                         {copied ? '복사됨' : '복사'}
                     </button>
@@ -64,7 +64,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, clinicCode, showI
                 <p className="text-xs text-slate-500 mt-2">직원/태블릿 계정은 로그인 후 클리닉 코드로 참여할 수 있습니다.</p>
             </div>
         )}
-        <div className="bg-white p-6 rounded-2xl shadow-soft border border-slate-200">
+        <div className="card-growth p-6">
                 <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-6">
                     <SettingsIcon className="text-slate-400" />
                     환경 설정 (Clinic Settings)
@@ -79,7 +79,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, clinicCode, showI
                             <input
                                 type="text"
                                 required
-                                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                                className="input-growth"
                                 value={formData.hospitalName}
                                 onChange={e => setFormData({ ...formData, hospitalName: e.target.value })}
                             />
@@ -91,7 +91,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, clinicCode, showI
                             <input
                                 type="text"
                                 required
-                                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                                className="input-growth"
                                 value={formData.doctorName}
                                 onChange={e => setFormData({ ...formData, doctorName: e.target.value })}
                             />
@@ -103,7 +103,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, clinicCode, showI
                             <input
                                 type="text"
                                 required
-                                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                                className="input-growth"
                                 value={formData.address}
                                 onChange={e => setFormData({ ...formData, address: e.target.value })}
                             />
@@ -115,7 +115,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, clinicCode, showI
                             <input
                                 type="text"
                                 required
-                                className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                                className="input-growth"
                                 value={formData.phone}
                                 onChange={e => setFormData({ ...formData, phone: e.target.value })}
                             />
@@ -125,7 +125,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave, clinicCode, showI
                     <div className="flex justify-end pt-4 border-t border-slate-100">
                         <button
                             type="submit"
-                            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                            className="btn-growth flex items-center gap-2"
                         >
                             <Save size={18} />
                             설정 저장

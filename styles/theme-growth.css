@@ -1,0 +1,104 @@
+/* styles/theme-growth.css */
+@import "tailwindcss";
+
+/* =========================
+   Growth Clinic Theme (Pastel / Friendly)
+========================= */
+
+@theme {
+  /* Brand palette */
+  --color-growth-mint-50:  oklch(0.97 0.02 165);
+  --color-growth-mint-100: oklch(0.94 0.03 165);
+  --color-growth-mint-300: oklch(0.89 0.05 165);
+  --color-growth-mint-500: oklch(0.83 0.08 165);
+  --color-growth-mint-700: oklch(0.72 0.10 165);
+
+  --color-growth-lav-50:   oklch(0.97 0.02 290);
+  --color-growth-lav-100:  oklch(0.94 0.03 290);
+  --color-growth-lav-300:  oklch(0.89 0.05 290);
+  --color-growth-lav-500:  oklch(0.85 0.05 290);
+  --color-growth-lav-700:  oklch(0.74 0.08 290);
+
+  --color-growth-cream-50:  oklch(0.99 0.01 95);
+  --color-growth-cream-100: oklch(0.97 0.015 95);
+  --color-growth-cream-500: oklch(0.95 0.02 95);
+
+  --color-ink-900: oklch(0.22 0.02 260);
+  --color-ink-700: oklch(0.35 0.02 260);
+  --color-ink-500: oklch(0.48 0.02 260);
+
+  /* Semantic */
+  --color-accent:  var(--color-growth-mint-500);
+  --color-accent-weak: var(--color-growth-mint-100);
+
+  --color-calm:    var(--color-growth-lav-500);
+  --color-calm-weak: var(--color-growth-lav-100);
+
+  --color-surface: var(--color-growth-cream-100);
+  --color-surface-2: oklch(1 0 0);
+
+  --color-border: oklch(0.88 0.01 260);
+  --color-muted:  oklch(0.70 0.01 260);
+
+  --color-text:   var(--color-ink-900);
+  --color-text-subtle: var(--color-ink-700);
+
+  --color-success: oklch(0.78 0.12 150);
+  --color-warning: oklch(0.85 0.12 80);
+  --color-danger:  oklch(0.70 0.18 25);
+
+  /* Typography */
+  --font-sans: "Pretendard Variable", system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans KR", "Apple SD Gothic Neo",
+    sans-serif;
+
+  /* Radius / shadow */
+  --radius-xs: 10px;
+  --radius-sm: 14px;
+  --radius-md: 18px;
+  --radius-lg: 22px;
+
+  --shadow-soft: 0 10px 30px -18px rgb(0 0 0 / 0.25);
+  --shadow-card: 0 8px 24px -18px rgb(0 0 0 / 0.22);
+}
+
+@layer base {
+  :root { font-family: var(--font-sans); color: var(--color-text); }
+  body  { background: var(--color-surface); color: var(--color-text); }
+}
+
+@layer components {
+  /* Growth clinic components */
+  .card-growth {
+    @apply rounded-2xl border border-border bg-surface-2/80 backdrop-blur;
+    box-shadow: var(--shadow-card);
+  }
+  .card-growth-header { @apply px-6 pt-6 pb-3; }
+  .card-growth-body   { @apply px-6 pb-6; }
+
+  .title-growth { @apply text-lg font-semibold text-text; }
+  .muted-growth { @apply text-sm text-text-subtle; }
+
+  .btn-growth {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold;
+    @apply bg-accent text-white shadow-sm hover:opacity-95 active:opacity-90;
+  }
+  .btn-growth-calm {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold;
+    @apply bg-calm text-white shadow-sm hover:opacity-95 active:opacity-90;
+  }
+  .btn-growth-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold;
+    @apply bg-transparent text-text hover:bg-black/5;
+  }
+
+  .input-growth {
+    @apply w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm;
+    @apply placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40;
+  }
+
+  .badge { @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold; }
+  .badge-growth-accent { @apply badge bg-accent/15 text-accent; }
+  .badge-growth-calm   { @apply badge bg-calm/15 text-calm; }
+  .badge-growth-muted  { @apply badge bg-black/5 text-text-subtle; }
+}
