@@ -222,6 +222,14 @@ export const api = {
         }) as Patient[];
     },
 
+    async backfillPatientsToMyClinic(): Promise<number> {
+        const { data, error } = await supabase.rpc('backfill_patients_to_my_clinic');
+        if (error) throw error;
+        if (typeof data === 'number') return data;
+        if (data && typeof (data as any).count === 'number') return (data as any).count;
+        return 0;
+    },
+
     async getPatient(id: string) {
         const { data, error } = await supabase
             .from('patients')

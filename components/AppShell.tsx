@@ -67,6 +67,7 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
   const [intakeLink, setIntakeLink] = useState<{ url: string; expiresAt: string } | null>(null);
   const [intakeLinkLoading, setIntakeLinkLoading] = useState(false);
   const [pendingPatientId, setPendingPatientId] = useState<string | undefined>(initialPatientId);
+  const [backfillAttempted, setBackfillAttempted] = useState(false);
 
   const normalizedRole = clinic?.role === 'member' ? 'staff' : clinic?.role;
   const role = normalizedRole || 'staff';
@@ -227,6 +228,23 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
   const loadData = async (clinicId: string) => {
     try {
       const patientsList = await api.getPatients(clinicId);
+      if (
+        isOwner &&
+        !backfillAttempted &&
+        (!patientsList || patientsList.length === 0)
+      ) {
+        setBackfillAttempted(true);
+        try {
+          const updated = await api.backfillPatientsToMyClinic();
+          if (updated > 0) {
+            const reloaded = await api.getPatients(clinicId);
+            setPatients(reloaded || []);
+            return;
+          }
+        } catch (e) {
+          console.warn('Failed to backfill patients', e);
+        }
+      }
       setPatients(patientsList || []);
     } catch (e) {
       console.error('Failed to load data', e);
