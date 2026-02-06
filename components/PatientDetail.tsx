@@ -659,7 +659,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           onUpdate={onRefresh}
         />
       )}
-      )}
     </div>
   );
 };
