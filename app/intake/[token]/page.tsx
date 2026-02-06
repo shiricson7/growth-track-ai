@@ -30,7 +30,7 @@ export default async function IntakePage({ params }: IntakePageProps) {
   }
   const { data, error } = await supabaseAdmin
     .from('intake_tokens')
-    .select('token, expires_at, status, patient:patients(name, birth_date, gender, height_father, height_mother)')
+    .select('token, expires_at, status, patient:patients(id, name, birth_date, gender, height_father, height_mother)')
     .eq('token', token)
     .maybeSingle();
 
@@ -69,6 +69,19 @@ export default async function IntakePage({ params }: IntakePageProps) {
   }
 
   const patient = Array.isArray(data.patient) ? data.patient[0] : data.patient;
+  let latestMeasurement: { date?: string | null; height?: number | null; weight?: number | null } | null = null;
+  if (patient?.id) {
+    const { data: measurementData } = await supabaseAdmin
+      .from('measurements')
+      .select('date, height, weight')
+      .eq('patient_id', patient.id)
+      .or('height.gt.0,weight.gt.0')
+      .order('date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    latestMeasurement = measurementData ?? null;
+  }
+
   const prefill = patient
     ? {
         child_name: patient.name ?? '',
@@ -76,6 +89,9 @@ export default async function IntakePage({ params }: IntakePageProps) {
         sex: patient.gender === 'female' ? '여' : patient.gender === 'male' ? '남' : '',
         father_cm: patient.height_father ?? '',
         mother_cm: patient.height_mother ?? '',
+        height_cm: latestMeasurement?.height ?? '',
+        weight_kg: latestMeasurement?.weight ?? '',
+        measure_date: latestMeasurement?.date ?? '',
       }
     : undefined;
 

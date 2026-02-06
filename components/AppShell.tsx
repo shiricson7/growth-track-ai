@@ -31,6 +31,7 @@ import Auth from './Auth';
 import ClinicOnboarding from './ClinicOnboarding';
 import IntakesDashboard from './IntakesDashboard';
 import MembershipManager from './MembershipManager';
+import IntakeQrModal from './IntakeQrModal';
 import { ClinicInfo, LabResult, Patient } from '../types';
 import { api } from '../src/services/api';
 import { aiService } from '../src/services/ai';
@@ -66,6 +67,7 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
   const [editingPatient, setEditingPatient] = useState<Patient | undefined>(undefined);
   const [intakeLink, setIntakeLink] = useState<{ url: string; expiresAt: string } | null>(null);
   const [intakeLinkLoading, setIntakeLinkLoading] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const [pendingPatientId, setPendingPatientId] = useState<string | undefined>(initialPatientId);
   const [backfillAttempted, setBackfillAttempted] = useState(false);
 
@@ -336,7 +338,28 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
     }
   };
 
+  const openIntakeQrForPatient = async (patient: Patient) => {
+    setIntakeLinkLoading(true);
+    try {
+      const token = await api.createIntakeToken(patient.id);
+      setIntakeLink({
+        url: `${window.location.origin}/intake/${token.token}`,
+        expiresAt: token.expires_at,
+      });
+      setQrOpen(true);
+    } catch (e) {
+      console.error('Failed to create intake link', e);
+      alert('\ubb38\uc9c4 \ub9c1\ud06c \uc0dd\uc131\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4.');
+    } finally {
+      setIntakeLinkLoading(false);
+    }
+  };
+
   const handleSelectPatient = async (patient: Patient) => {
+    if (isTablet) {
+      await openIntakeQrForPatient(patient);
+      return;
+    }
     setCurrentPatient(patient);
     await loadPatientData(patient.id);
     setCurrentView('patient-detail');
@@ -544,6 +567,14 @@ function AppShell({ initialPatientId }: { initialPatientId?: string }) {
 
       {!authLoading && session && !clinicLoading && clinic && (
         <div className="relative flex min-h-screen bg-transparent font-sans app-shell">
+          {intakeLink && (
+            <IntakeQrModal
+              open={qrOpen}
+              onClose={() => setQrOpen(false)}
+              url={intakeLink.url}
+              expiresAt={intakeLink.expiresAt}
+            />
+          )}
           {/* Sidebar */}
           <aside className="w-64 bg-white/90 backdrop-blur border-r border-slate-200 hidden md:flex flex-col app-sidebar">
             <div className="p-6 border-b border-slate-100">
