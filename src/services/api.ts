@@ -21,6 +21,26 @@ const normalizeClinicRole = (role?: string | null): ClinicRole | undefined => {
 
 export const api = {
     async getMyClinic(): Promise<ClinicInfo | null> {
+        try {
+            const { data: rpcData, error: rpcError } = await supabase.rpc('get_my_clinic');
+            if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+                const row = rpcData[0] as any;
+                if (row?.clinic_id && row?.id) {
+                    return {
+                        id: row.clinic_id,
+                        name: row.name,
+                        clinicCode: row.clinic_code,
+                        role: normalizeClinicRole(row.role),
+                        doctorName: row.doctor_name ?? null,
+                        address: row.address ?? null,
+                        phone: row.phone ?? null
+                    };
+                }
+            }
+        } catch {
+            // Fall back to direct queries below.
+        }
+
         const { data: sessionData } = await supabase.auth.getSession();
         let user = sessionData?.session?.user || null;
 
