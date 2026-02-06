@@ -214,7 +214,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
       )}
 
       {showClinicalSections && (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Growth Chart */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -539,8 +540,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
               </table>
             </div>
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Recent Labs & Trends */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -650,14 +651,16 @@ const PatientDetail: React.FC<PatientDetailProps> = ({
           </div>
         )}
       </div>
-      {/* Bone Age History Modal */}
-      {showBoneAgeHistory && (
-        <BoneAgeHistory
-          patient={patient}
-          measurements={measurements}
-          onClose={() => setShowBoneAgeHistory(false)}
-          onUpdate={onRefresh}
-        />
+          {/* Bone Age History Modal */}
+          {showBoneAgeHistory && (
+            <BoneAgeHistory
+              patient={patient}
+              measurements={measurements}
+              onClose={() => setShowBoneAgeHistory(false)}
+              onUpdate={onRefresh}
+            />
+          )}
+        </>
       )}
     </div>
   );
