@@ -1,5 +1,6 @@
 /* styles/theme-growth.css */
 @import "tailwindcss";
+@config "../tailwind.config.cjs";
 
 /* =========================
    Growth Clinic Theme (Pastel / Friendly)
