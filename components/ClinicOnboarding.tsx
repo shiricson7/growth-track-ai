@@ -85,7 +85,7 @@ const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ onComplete, initial
                 <Building2 size={16} className="absolute left-3 top-3 text-slate-400" />
                 <input
                   type="text"
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pl-9"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pl-9 pr-3 py-2.5"
                   value={clinicName}
                   onChange={(e) => setClinicName(e.target.value)}
                   placeholder="예) GrowthTrack Clinic"
@@ -124,10 +124,10 @@ const ClinicOnboarding: React.FC<ClinicOnboardingProps> = ({ onComplete, initial
                 <KeyRound size={16} className="absolute left-3 top-3 text-slate-400" />
                 <input
                   type="text"
-                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pl-9"
+                  className="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500 pl-9 pr-3 py-2.5"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value)}
-                placeholder="예) a1b2c3d4"
+                  placeholder="예) a1b2c3d4"
                 />
               </div>
             </div>
