@@ -171,6 +171,23 @@ const LmsChart: React.FC<{
       .sort((a: XYPoint, b: XYPoint) => a.x - b.x);
   }, [growthData, metric]);
 
+  const patientBoneAgeSeries = React.useMemo(() => {
+    if (metric !== 'height') return [];
+    const hasPatientFlag = (growthData || []).some((p: any) => typeof p?.isPatient === 'boolean');
+    const patientRows = (growthData || []).filter((p: any) => {
+      if (hasPatientFlag && !p?.isPatient) return false;
+      return Number.isFinite(p?.boneAge) && p.boneAge > 0 && Number.isFinite(p?.height) && p.height > 0;
+    });
+
+    return patientRows
+      .map((p: any) => ({
+        x: Number(p.boneAge),
+        y: Number(p.height),
+      }))
+      .filter((p: XYPoint) => Number.isFinite(p.x) && Number.isFinite(p.y))
+      .sort((a: XYPoint, b: XYPoint) => a.x - b.x);
+  }, [growthData, metric]);
+
   React.useEffect(() => {
     let cancelled = false;
 
@@ -239,6 +256,20 @@ const LmsChart: React.FC<{
             pointHoverRadius: 4,
             tension: 0.15,
           },
+          ...(metric === 'height' && patientBoneAgeSeries.length > 0
+            ? [
+                {
+                  label: '골연령 기준 키',
+                  data: patientBoneAgeSeries,
+                  borderWidth: 2.5,
+                  pointRadius: 3,
+                  pointHoverRadius: 4,
+                  tension: 0.15,
+                  borderColor: '#ff0000',
+                  backgroundColor: '#ff0000',
+                },
+              ]
+            : []),
         ],
       },
       options: {
@@ -288,7 +319,7 @@ const LmsChart: React.FC<{
     return () => {
       chart.destroy();
     };
-  }, [lmsRows, metric, patientSeries, title]);
+  }, [lmsRows, metric, patientSeries, patientBoneAgeSeries, title]);
 
   if (loadError) {
     return <div className="h-full flex items-center justify-center text-slate-500">{loadError}</div>;
