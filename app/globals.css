@@ -113,3 +113,19 @@ h4 {
 .print-only {
   display: none;
 }
+
+.report-full-chart {
+  min-height: 72vh;
+}
+
+@media print {
+  .report-full-chart {
+    height: 205mm !important;
+    min-height: 205mm !important;
+  }
+
+  .report-full-chart canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+}

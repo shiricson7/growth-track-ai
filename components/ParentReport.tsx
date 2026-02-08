@@ -261,10 +261,10 @@ const LmsChart: React.FC<{
         },
         plugins: {
           legend: {
-            position: 'top',
+            display: false,
           },
           title: {
-            display: true,
+            display: false,
             text: title,
           },
         },
@@ -660,7 +660,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         style={{ breakBefore: 'page', pageBreakBefore: 'always' }}
       >
         <h2 className="text-3xl font-bold text-slate-900 mb-6">{patient.name}의 키성장 그래프</h2>
-        <div className="flex-1 border border-slate-200 rounded-2xl p-4 min-h-[760px]">
+        <div className="report-full-chart flex-1 border border-slate-200 rounded-2xl p-4">
           <LmsChart
             title={`${patient.name}의 키성장 그래프`}
             metric="height"
@@ -675,7 +675,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         style={{ breakBefore: 'page', pageBreakBefore: 'always' }}
       >
         <h2 className="text-3xl font-bold text-slate-900 mb-6">{patient.name}의 몸무게 그래프</h2>
-        <div className="flex-1 border border-slate-200 rounded-2xl p-4 min-h-[720px]">
+        <div className="report-full-chart flex-1 border border-slate-200 rounded-2xl p-4">
           <LmsChart
             title={`${patient.name}의 몸무게 그래프`}
             metric="weight"
