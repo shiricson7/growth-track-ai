@@ -121,12 +121,36 @@ h4 {
 
 @media print {
   .print-guardian-report {
-    padding: 9mm 10mm !important;
+    padding: 6mm 8mm !important;
+  }
+
+  .print-report-header {
+    padding-bottom: 3mm !important;
+    margin-bottom: 3mm !important;
+  }
+
+  .print-summary-section {
+    margin-bottom: 3mm !important;
+  }
+
+  .print-guide-section {
+    margin-bottom: 0 !important;
+    min-height: auto !important;
+    padding-top: 3mm !important;
   }
 
   .guardian-report-markdown {
-    font-size: 10pt !important;
-    line-height: 1.45 !important;
+    font-size: 9.5pt !important;
+    line-height: 1.35 !important;
+  }
+
+  .guardian-report-body {
+    padding: 4mm !important;
+  }
+
+  .guardian-report-markdown p,
+  .guardian-report-markdown li {
+    margin-bottom: 0.8mm !important;
   }
 
   .guardian-report-markdown h2 {
@@ -147,27 +171,50 @@ h4 {
     margin-bottom: 1mm !important;
   }
 
+  .print-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 2mm !important;
+  }
+
+  .print-summary-card {
+    padding: 2.5mm !important;
+  }
+
+  .print-summary-card .text-2xl {
+    font-size: 13pt !important;
+  }
+
+  .print-summary-card .text-3xl {
+    font-size: 15pt !important;
+  }
+
   .chart-two-up-section {
-    padding: 6mm 10mm !important;
+    height: 270mm !important;
+    min-height: 270mm !important;
+    padding: 4mm 8mm !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
   .chart-two-up-stack {
-    gap: 3mm !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    gap: 2.5mm !important;
   }
 
   .chart-two-up-item {
+    flex: 1 !important;
     min-height: 0 !important;
   }
 
   .print-chart-title {
-    font-size: 12pt !important;
-    margin-bottom: 2mm !important;
+    font-size: 11pt !important;
+    line-height: 1.2 !important;
+    margin-bottom: 1.5mm !important;
   }
 
   .print-footer {
-    margin-top: 2mm !important;
+    margin-top: 1.5mm !important;
     font-size: 9pt !important;
   }
 
@@ -177,8 +224,9 @@ h4 {
   }
 
   .chart-two-up-section .chart-two-up-chart {
-    height: 82mm !important;
-    min-height: 82mm !important;
+    flex: 1 !important;
+    height: auto !important;
+    min-height: 0 !important;
   }
 
   .report-full-chart canvas {

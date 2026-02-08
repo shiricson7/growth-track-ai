@@ -574,7 +574,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
       </div>
 
       <section className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section print-guardian-report flex flex-col">
-        <div className="border-b-4 border-blue-600 pb-8 mb-8 flex justify-between items-start">
+        <div className="print-report-header border-b-4 border-blue-600 pb-8 mb-8 flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">성장 발달 리포트</h1>
             <p className="text-slate-500 mt-2 text-lg"><span className="text-slate-900 font-semibold">{patient.name}</span> 어린이의 부모님께 드리는 보고서</p>
@@ -586,7 +586,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
           </div>
         </div>
 
-        <div className="mb-10 min-h-[320px] print-allow-break order-2 pt-8 border-t border-slate-200">
+        <div className="print-guide-section mb-10 min-h-[320px] print-allow-break order-2 pt-8 border-t border-slate-200">
           <h2 className="text-xl font-bold text-slate-800 mb-4">[보호자용 설명]</h2>
           {loading ? (
             <div className="flex flex-col items-center justify-center h-48 space-y-4">
@@ -605,7 +605,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
           )}
         </div>
 
-        <div className="order-1">
+        <div className="print-summary-section order-1">
           <h2 className="text-xl font-bold text-slate-800 mb-4">[현재 체격 요약]</h2>
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
@@ -614,8 +614,8 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                 기준일: {latestMeasurement?.date || '기록 없음'}
               </span>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
+            <div className="print-summary-grid grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="print-summary-card border border-slate-100 rounded-xl p-4 bg-slate-50">
                 <div className="text-xs text-slate-500 mb-1">현재 키</div>
                 <div className="flex items-end gap-2">
                   <span className="text-2xl font-bold text-slate-900">
@@ -629,7 +629,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                   </span>
                 )}
               </div>
-              <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
+              <div className="print-summary-card border border-slate-100 rounded-xl p-4 bg-slate-50">
                 <div className="text-xs text-slate-500 mb-1">예측 키</div>
                 <div className="flex items-end gap-2">
                   <span className="text-2xl font-bold text-slate-900">
@@ -639,7 +639,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                 </div>
                 <div className="mt-2 text-xs text-slate-500">AI 예측키</div>
               </div>
-              <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
+              <div className="print-summary-card border border-slate-100 rounded-xl p-4 bg-slate-50">
                 <div className="text-xs text-slate-500 mb-1">현재 체중</div>
                 <div className="flex items-end gap-2">
                   <span className="text-2xl font-bold text-slate-900">
@@ -653,7 +653,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                   </span>
                 )}
               </div>
-              <div className="border border-blue-100 rounded-xl p-4 bg-blue-50">
+              <div className="print-summary-card border border-blue-100 rounded-xl p-4 bg-blue-50">
                 <div className="text-xs text-blue-700 mb-1 font-semibold">BMI 백분위</div>
                 <div className="flex items-end gap-2">
                   <span className="text-3xl font-bold text-blue-700">
