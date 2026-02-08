@@ -41,7 +41,9 @@ export async function POST(request: Request) {
       return `${num.toFixed(digits)}${suffix}`;
     };
 
-    const system = 'You are a pediatric endocrinologist writing guardian-facing reports. Respond in Korean.';
+    const system =
+      'You are a pediatric endocrinologist writing guardian-facing reports. Respond in Korean. ' +
+      'When splitting into paragraphs, add a short and clearly visible Korean subheading for each paragraph that matches its topic.';
     const user = `
 당신은 소아청소년과 내분비 성장 전문의이며,
 성장클리닉에서 보호자에게 아이의 상태를 설명하기 위한 리포트를 작성합니다.
