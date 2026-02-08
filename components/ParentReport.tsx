@@ -201,9 +201,13 @@ const LmsChart: React.FC<{
   React.useEffect(() => {
     if (!canvasRef.current || lmsRows.length === 0) return;
 
-    const percentiles = [0.03, 0.5, 0.97];
-    const percentileDatasets = percentiles.map((p) => {
-      const z = inverseStandardNormal(p);
+    const percentileMeta = [
+      { value: 0.03, label: '3P', color: '#94a3b8' },
+      { value: 0.5, label: '50P', color: '#64748b' },
+      { value: 0.97, label: '97P', color: '#94a3b8' },
+    ];
+    const percentileDatasets = percentileMeta.map((meta) => {
+      const z = inverseStandardNormal(meta.value);
       const data = lmsRows
         .map((row) => {
           const y = lmsToValue(row, z);
@@ -213,12 +217,14 @@ const LmsChart: React.FC<{
         .filter((v): v is XYPoint => v !== null);
 
       return {
-        label: `P${Math.round(p * 100)}`,
+        label: meta.label,
         data,
         pointRadius: 0,
         pointHoverRadius: 0,
         borderWidth: 2,
         tension: 0.2,
+        borderColor: meta.color,
+        backgroundColor: meta.color,
       };
     });
 
@@ -230,10 +236,12 @@ const LmsChart: React.FC<{
           {
             label: metricConfig[metric].patientLabel,
             data: patientSeries,
-            borderWidth: 2,
+            borderWidth: 2.5,
             pointRadius: 3,
             pointHoverRadius: 4,
             tension: 0.15,
+            borderColor: metric === 'height' ? '#2563eb' : '#059669',
+            backgroundColor: metric === 'height' ? '#2563eb' : '#059669',
           },
         ],
       },
@@ -261,7 +269,17 @@ const LmsChart: React.FC<{
         },
         plugins: {
           legend: {
-            display: false,
+            display: true,
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 10,
+              boxHeight: 10,
+              font: {
+                size: 10,
+                weight: 600,
+              },
+            },
           },
           title: {
             display: false,
@@ -623,6 +641,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
                   </span>
                   <span className="text-sm text-slate-500">cm</span>
                 </div>
+                <div className="mt-2 text-xs text-slate-500">AI 예측키</div>
               </div>
               <div className="border border-slate-100 rounded-xl p-4 bg-slate-50">
                 <div className="text-xs text-slate-500 mb-1">현재 체중</div>
