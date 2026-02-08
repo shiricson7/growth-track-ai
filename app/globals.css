@@ -147,14 +147,23 @@ h4 {
     margin-bottom: 1mm !important;
   }
 
-  .chart-page-section {
+  .chart-two-up-section {
     padding: 6mm 10mm !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 
-  .chart-page-section + .chart-page-section {
-    margin-top: 3mm !important;
+  .chart-two-up-stack {
+    gap: 3mm !important;
+  }
+
+  .chart-two-up-item {
+    min-height: 0 !important;
+  }
+
+  .print-chart-title {
+    font-size: 12pt !important;
+    margin-bottom: 2mm !important;
   }
 
   .print-footer {
@@ -167,9 +176,9 @@ h4 {
     min-height: 220mm !important;
   }
 
-  .chart-page-section .report-full-chart {
-    height: 94mm !important;
-    min-height: 94mm !important;
+  .chart-two-up-section .chart-two-up-chart {
+    height: 82mm !important;
+    min-height: 82mm !important;
   }
 
   .report-full-chart canvas {

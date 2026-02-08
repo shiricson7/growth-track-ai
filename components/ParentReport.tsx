@@ -202,9 +202,9 @@ const LmsChart: React.FC<{
     if (!canvasRef.current || lmsRows.length === 0) return;
 
     const percentileMeta = [
-      { value: 0.03, label: '3P', color: '#94a3b8' },
-      { value: 0.5, label: '50P', color: '#64748b' },
-      { value: 0.97, label: '97P', color: '#94a3b8' },
+      { value: 0.03, label: '3P' },
+      { value: 0.5, label: '50P' },
+      { value: 0.97, label: '97P' },
     ];
     const percentileDatasets = percentileMeta.map((meta) => {
       const z = inverseStandardNormal(meta.value);
@@ -223,8 +223,6 @@ const LmsChart: React.FC<{
         pointHoverRadius: 0,
         borderWidth: 2,
         tension: 0.2,
-        borderColor: meta.color,
-        backgroundColor: meta.color,
       };
     });
 
@@ -240,8 +238,6 @@ const LmsChart: React.FC<{
             pointRadius: 3,
             pointHoverRadius: 4,
             tension: 0.15,
-            borderColor: metric === 'height' ? '#2563eb' : '#059669',
-            backgroundColor: metric === 'height' ? '#2563eb' : '#059669',
           },
         ],
       },
@@ -675,36 +671,37 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
       </section>
 
       <section
-        className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section chart-page-section flex flex-col"
+        className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section chart-two-up-section flex flex-col"
         style={{ breakBefore: 'page', pageBreakBefore: 'always' }}
       >
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">[키 차트]</h2>
-        <div className="report-full-chart flex-1 border border-slate-200 rounded-2xl p-4">
-          <LmsChart
-            title={`${patient.name} 키 차트`}
-            metric="height"
-            gender={patient.gender}
-            growthData={growthData}
-          />
-        </div>
-      </section>
+        <div className="chart-two-up-stack flex flex-col gap-4 flex-1">
+          <div className="chart-two-up-item flex flex-col">
+            <h2 className="print-chart-title text-3xl font-bold text-slate-900 mb-4">[키 차트]</h2>
+            <div className="report-full-chart chart-two-up-chart border border-slate-200 rounded-2xl p-4">
+              <LmsChart
+                title={`${patient.name} 키 차트`}
+                metric="height"
+                gender={patient.gender}
+                growthData={growthData}
+              />
+            </div>
+          </div>
 
-      <section
-        className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section chart-page-section flex flex-col"
-        style={{ breakBefore: 'auto', pageBreakBefore: 'auto' }}
-      >
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">[몸무게 차트]</h2>
-        <div className="report-full-chart flex-1 border border-slate-200 rounded-2xl p-4">
-          <LmsChart
-            title={`${patient.name} 몸무게 차트`}
-            metric="weight"
-            gender={patient.gender}
-            growthData={growthData}
-          />
+          <div className="chart-two-up-item flex flex-col">
+            <h2 className="print-chart-title text-3xl font-bold text-slate-900 mb-4">[몸무게 차트]</h2>
+            <div className="report-full-chart chart-two-up-chart border border-slate-200 rounded-2xl p-4">
+              <LmsChart
+                title={`${patient.name} 몸무게 차트`}
+                metric="weight"
+                gender={patient.gender}
+                growthData={growthData}
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="print-footer mt-8 text-sm text-slate-500 border-t border-slate-200 pt-3 text-center">
-          {settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}
+        <div className="print-footer mt-6 text-sm text-slate-500 border-t border-slate-200 pt-3 text-center">
+          {settings?.hospitalName || 'GrowthTrack Clinic'} / {settings?.address || ''} / {settings?.phone || ''}
         </div>
       </section>
     </div>
