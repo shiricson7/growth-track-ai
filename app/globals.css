@@ -120,9 +120,56 @@ h4 {
 }
 
 @media print {
+  .print-guardian-report {
+    padding: 9mm 10mm !important;
+  }
+
+  .guardian-report-markdown {
+    font-size: 10pt !important;
+    line-height: 1.45 !important;
+  }
+
+  .guardian-report-markdown h2 {
+    font-size: 13pt !important;
+    margin-top: 3mm !important;
+    margin-bottom: 2mm !important;
+  }
+
+  .guardian-report-markdown h3 {
+    font-size: 11pt !important;
+    margin-top: 2.5mm !important;
+    margin-bottom: 1.5mm !important;
+  }
+
+  .guardian-report-markdown h4 {
+    font-size: 10pt !important;
+    margin-top: 2mm !important;
+    margin-bottom: 1mm !important;
+  }
+
+  .chart-page-section {
+    padding: 6mm 10mm !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .chart-page-section + .chart-page-section {
+    margin-top: 3mm !important;
+  }
+
+  .print-footer {
+    margin-top: 2mm !important;
+    font-size: 9pt !important;
+  }
+
   .report-full-chart {
     height: 220mm !important;
     min-height: 220mm !important;
+  }
+
+  .chart-page-section .report-full-chart {
+    height: 94mm !important;
+    min-height: 94mm !important;
   }
 
   .report-full-chart canvas {

@@ -298,7 +298,7 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
   const sections = content.split(/\n(?=# )/g);
 
   return (
-    <div className="space-y-6 text-slate-700 leading-relaxed">
+    <div className="guardian-report-markdown space-y-6 text-slate-700 leading-relaxed">
       {sections.map((section, idx) => {
         const lines = section.split('\n');
         const header = lines[0];
@@ -559,7 +559,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
         </div>
       </div>
 
-      <section className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section">
+      <section className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section print-guardian-report flex flex-col">
         <div className="border-b-4 border-blue-600 pb-8 mb-8 flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">성장 발달 리포트</h1>
@@ -572,8 +572,8 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
           </div>
         </div>
 
-        <div className="mb-10 min-h-[320px] print-allow-break">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">보호자용 설명</h2>
+        <div className="mb-10 min-h-[320px] print-allow-break order-2 pt-8 border-t border-slate-200">
+          <h2 className="text-xl font-bold text-slate-800 mb-4">[보호자용 설명]</h2>
           {loading ? (
             <div className="flex flex-col items-center justify-center h-48 space-y-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -581,7 +581,7 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
               <p className="text-xs text-slate-400">약 5-10초 정도 소요됩니다.</p>
             </div>
           ) : reportContent ? (
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 print-allow-break">
+            <div className="guardian-report-body bg-slate-50 p-8 rounded-xl border border-slate-100 print-allow-break">
               <MarkdownRenderer content={reportContent} />
             </div>
           ) : (
@@ -591,8 +591,8 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
           )}
         </div>
 
-        <div className="mt-10">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">현재 체격 요약</h2>
+        <div className="order-1">
+          <h2 className="text-xl font-bold text-slate-800 mb-4">[현재 체격 요약]</h2>
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
               <h3 className="text-lg font-bold text-slate-800">측정 요약</h3>
@@ -656,13 +656,13 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
       </section>
 
       <section
-        className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section flex flex-col"
+        className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section chart-page-section flex flex-col"
         style={{ breakBefore: 'page', pageBreakBefore: 'always' }}
       >
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">{patient.name}의 키성장 그래프</h2>
+        <h2 className="text-3xl font-bold text-slate-900 mb-6">[키 차트]</h2>
         <div className="report-full-chart flex-1 border border-slate-200 rounded-2xl p-4">
           <LmsChart
-            title={`${patient.name}의 키성장 그래프`}
+            title={`${patient.name} 키 차트`}
             metric="height"
             gender={patient.gender}
             growthData={growthData}
@@ -671,20 +671,20 @@ const ParentReport: React.FC<ParentReportProps> = ({ patient, growthData, labRes
       </section>
 
       <section
-        className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section flex flex-col"
-        style={{ breakBefore: 'page', pageBreakBefore: 'always' }}
+        className="bg-white p-12 rounded-none shadow-lg min-h-[980px] print-report print-section chart-page-section flex flex-col"
+        style={{ breakBefore: 'auto', pageBreakBefore: 'auto' }}
       >
-        <h2 className="text-3xl font-bold text-slate-900 mb-6">{patient.name}의 몸무게 그래프</h2>
+        <h2 className="text-3xl font-bold text-slate-900 mb-6">[몸무게 차트]</h2>
         <div className="report-full-chart flex-1 border border-slate-200 rounded-2xl p-4">
           <LmsChart
-            title={`${patient.name}의 몸무게 그래프`}
+            title={`${patient.name} 몸무게 차트`}
             metric="weight"
             gender={patient.gender}
             growthData={growthData}
           />
         </div>
 
-        <div className="mt-8 text-sm text-slate-500 border-t border-slate-200 pt-3 text-center">
+        <div className="print-footer mt-8 text-sm text-slate-500 border-t border-slate-200 pt-3 text-center">
           {settings?.hospitalName || 'GrowthTrack Clinic'} • {settings?.address || ''} • {settings?.phone || ''}
         </div>
       </section>
