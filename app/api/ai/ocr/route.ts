@@ -26,6 +26,7 @@ Analyze this medical lab report image and extract the following:
    - IGFBP-3
    - Free T4
    - TSH
+   - HbA1c (A1c, Glycated Hemoglobin, 당화혈색소)
    - LH
    - FSH
    - Estradiol (E2)
