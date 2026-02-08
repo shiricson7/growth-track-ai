@@ -238,7 +238,7 @@ const LmsChart: React.FC<{
         ],
       },
       options: {
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false,
         interaction: {
           mode: 'nearest',
