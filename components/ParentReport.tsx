@@ -238,7 +238,7 @@ const LmsChart: React.FC<{
         ],
       },
       options: {
-        responsive: false,
+        responsive: true,
         maintainAspectRatio: false,
         interaction: {
           mode: 'nearest',
@@ -286,7 +286,7 @@ const LmsChart: React.FC<{
 
   return (
     <div className="h-full w-full">
-      <canvas ref={canvasRef} />
+      <canvas ref={canvasRef} className="h-full w-full block" />
     </div>
   );
 };

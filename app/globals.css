@@ -115,13 +115,14 @@ h4 {
 }
 
 .report-full-chart {
-  min-height: 72vh;
+  height: 78vh;
+  min-height: 760px;
 }
 
 @media print {
   .report-full-chart {
-    height: 205mm !important;
-    min-height: 205mm !important;
+    height: 220mm !important;
+    min-height: 220mm !important;
   }
 
   .report-full-chart canvas {
